@@ -10,7 +10,11 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Random;
 
@@ -76,12 +80,12 @@ public class Board {
             this.xAnchor = xAnchor;
             this.yAnchor = yAnchor;
             this.player = player;
+            
             pieceGen = new Random(seed);
             nextPieces = new LinkedList();
-            nextPieces.add(Game.tetrominoes[(int) Math.floor(pieceGen.nextDouble() * 7)]);
-            nextPieces.add(Game.tetrominoes[(int) Math.floor(pieceGen.nextDouble() * 7)]);
-            nextPieces.add(Game.tetrominoes[(int) Math.floor(pieceGen.nextDouble() * 7)]);
-            
+            List<Tetromino> toAdd = Arrays.asList(Game.tetrominoes);
+            Collections.shuffle(toAdd, pieceGen);
+            nextPieces.addAll(toAdd);
 	}
 
 	public void doStep() {
@@ -108,7 +112,11 @@ public class Board {
 
 	private void addPiece() {
             activePiece = nextPieces.remove();
-            nextPieces.add(Game.tetrominoes[(int) Math.floor(pieceGen.nextDouble() * 7)]);
+            if(nextPieces.size() < 3){
+                List<Tetromino> toAdd = Arrays.asList(Game.tetrominoes);
+                Collections.shuffle(toAdd, pieceGen);
+                nextPieces.addAll(toAdd);
+            }
             
             pieceOrigin = new Point(3,20);
             pieceRot = 0;
@@ -401,7 +409,9 @@ public class Board {
             
             // Draw Upcoming Pieces
             Point offset = new Point(xAnchor + boardWidth + 20, yAnchor + boardHeight - 130);
-            for(Tetromino tetromino : nextPieces){
+            Iterator<Tetromino> iter = nextPieces.iterator();
+            for(int next = 0; next < 3; next++){
+                Tetromino tetromino = iter.next();
                 renderer.setColor(tetromino.color);
                 for(Point p : tetromino.point[0]){
                     renderer.rect(offset.x + (p.x * 20),
