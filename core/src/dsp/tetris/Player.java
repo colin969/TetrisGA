@@ -14,9 +14,9 @@ import java.util.Random;
  */
 public class Player {
 
-        public Player(boolean cpu, float genome){
+        public Player(boolean cpu, float[] genome){
             this.genome = new float[1];
-            this.genome[0] = genome;
+            this.genome = genome;
             this.cpu = cpu;
         }
     
@@ -25,56 +25,30 @@ public class Player {
 	private float[] genome;
         
         // SIMPLE AI - Build without holes, best clears, then lowest height
-        public Action nextMove(Action[][] actions){
+        public Action nextMove(ArrayList<Action> actions){
             
-            ArrayList<Action> bestActions = new ArrayList();
+            Action bestAction = null;
+            float bestScore = 0;
             
-            for(int x = 0; x < 10; x++){
-                for(int y = 0; y < 4; y++){
-                    if(actions[x][y].valid){
-                        bestActions.add(actions[x][y]);
-                        break;
-                    }
-                }
-                if(!bestActions.isEmpty())
-                    break;
-            }
+            // Set initial move
+            bestAction = actions.get(0);
+            bestScore += genome[0] * (float)bestAction.holes;
+            bestScore += genome[1] * (float)bestAction.clears;
+            bestScore += genome[2] * (float)bestAction.height;
             
-            // If no valid moves available, return invalid move
-            if(bestActions.isEmpty()){
-                return actions[0][0];
-            }
-            
-            for(Action[] actionSet: actions){
-                for(int rot = 0; rot < 4; rot++){
-                    Action action = actionSet[rot];
-                    if(action.valid){
-                        action.rot = rot;
-                        Action tempBest = bestActions.get(0);
-                        if(action.holes < tempBest.holes){
-                            bestActions.clear();
-                            bestActions.add(action);
-                        }
-                        else if(action.holes == tempBest.holes){
-                            if(action.clears > tempBest.clears){
-                                bestActions.clear();
-                                bestActions.add(action);
-                            }
-                            else if(action.clears == tempBest.clears){
-                                if(action.height < tempBest.height){
-                                    bestActions.clear();
-                                    bestActions.add(action);
-                                } else if(action.height == tempBest.height)
-                                    bestActions.add(action);
-                            }
-                        }
-                    }
+            // Find best move(s)
+            for(Action action : actions){
+                float totalScore = 0;
+                totalScore += genome[0] * (float)action.holes;
+                totalScore += genome[1] * (float)action.clears;
+                totalScore += genome[2] * (float)action.height;
+                if(totalScore > bestScore){
+                    bestAction = action;
+                    bestScore = totalScore;
                 }
             }
             
-            Action best = bestActions.get(new Random().nextInt(bestActions.size()));
-//            Action best = bestActions.get(0);
-            return best;
+            return bestAction;
         }
         
         public boolean getCpu(){

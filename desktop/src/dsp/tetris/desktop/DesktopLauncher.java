@@ -2,7 +2,7 @@ package dsp.tetris.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import dsp.tetris.TetrisGA;
+import dsp.main.TetrisGA;
 
 public class DesktopLauncher {
 	public static void main (String[] arg) {

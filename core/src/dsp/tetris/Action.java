@@ -13,7 +13,6 @@ import java.awt.Point;
  */
 public class Action {
 
-        public boolean valid;
         public int clears;
         public int height;
         public int holes;

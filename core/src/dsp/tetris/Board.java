@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import java.awt.Point;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
@@ -22,7 +23,6 @@ public class Board {
         private static int boardWidth = 200;
         private static int boardHeight = 440;
         private static int blockSize = 20;
-        private static int miniBlockSize = 9;
         
         private int xAnchor;
         private int yAnchor;
@@ -42,6 +42,9 @@ public class Board {
         public int pieceRot;
         public int comboLevel;
         public int garbageLevel;
+        public int results;
+        public int linesClear;
+        private int step;
 
 	private int pieceNumber;
 
@@ -52,7 +55,10 @@ public class Board {
 	private Player player;
 
 	public Board(Player player, int seed, int xAnchor, int yAnchor) {
+            step = 0;
+            linesClear = 0;
             board =  new Color[10][24];
+            results = 1;
             for (int x = 0; x < 10; x++) {
                 for (int y = 0; y < 24; y++) {
                     board[x][y] = background;
@@ -79,6 +85,7 @@ public class Board {
 	}
 
 	public void doStep() {
+            step++;
             if(activePiece == null){
                 addPiece();
             } else {
@@ -86,9 +93,15 @@ public class Board {
             }
             
             if(player.getCpu() && isAlive){
-                Action action = player.nextMove(this.cpuGetAllActions());
-                if(action.valid){
-                    this.cpuDrop(action.origin, action.rot);
+                ArrayList<Action> actions = cpuGetAllActions();
+                if(!actions.isEmpty()){
+                    Action action = player.nextMove(actions);
+                    if(action != null){
+                        this.cpuDrop(action.origin, action.rot);
+                    }
+                } else {
+                    this.isAlive = false;
+                    this.results = 0;
                 }
             }
 	}
@@ -103,6 +116,7 @@ public class Board {
             // Failure!
             if(collides(3,20,pieceRot)){
                 this.isAlive = false;
+                this.results = 1;
             }
             
             pieceNumber++;
@@ -131,6 +145,7 @@ public class Board {
             }
             
             int lines = clearLines();
+            linesClear += lines;
             if(lines > 0){
                 // 100, 300, 500, 800
                 score += (comboLevel * 50) + 100 + (200 * (lines-1));
@@ -286,10 +301,12 @@ public class Board {
             int x;
             for(Point p : points){
                 x = origin.x + p.x;
+
                 if(x < 0 || x >= 10){
                     return false;
+                } else if (board[x][origin.y + p.y] != background){
+                    return false;
                 }
-                
             }
             return true;
         }
@@ -314,14 +331,14 @@ public class Board {
         }
         
         // Return an array of Column by Rotation values for the CPU player to choose from
-	public Action[][] cpuGetAllActions() {
-                Action[][] actions = new Action[11][4];
+	public ArrayList<Action> cpuGetAllActions() {
+                ArrayList<Action> validActions = new ArrayList();
                 for(int col = -2; col < 9; col++){
                     for(int rot = 0; rot < 4; rot++){
                         Action action = new Action();
+                        action.rot = rot;
                         // Make sure action is in bounds before finding lowest point to use
-                        action.valid = getValid(col, 20, activePiece.point[rot]);
-                        if(action.valid){
+                        if(getValid(col, 20, activePiece.point[rot])){
                             int y = getLowestValid(col, 20, activePiece.point[rot]);
                             action.origin = new Point(col, y);
                             
@@ -338,11 +355,11 @@ public class Board {
                                 if(tempY > action.height)
                                     action.height = tempY;
                             }
+                            validActions.add(action);
                         }
-                        actions[col+2][rot] = action;
                     }
                 }
-                return actions;
+                return validActions;
 	}
 
         // Drop by a CPU, guaranteed valid move.
@@ -411,6 +428,15 @@ public class Board {
 
     public void queueGarbage(int garbageLevel) {
         this.queuedGarbage += garbageLevel;
+    }
+
+    int getResults() {
+        results = this.score;
+        if(isAlive)
+            results += 100000/step;
+        else
+            results -= 100000/step;
+        return results;
     }
 
 }

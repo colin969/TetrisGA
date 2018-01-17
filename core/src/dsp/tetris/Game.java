@@ -22,10 +22,16 @@ public class Game {
         private int step;
         
         private int seed = 4;
+        
+        public int[] results;
+        
+        public boolean gameEnded;
 
 	public Board[] boards;
 
 	public void init() {
+            results = new int[2];
+            gameEnded = false;
             tetrominoes = new Tetromino[7];
             // I Block
             tetrominoes[0] = new Tetromino(Color.CYAN, new Point[][]{
@@ -82,20 +88,16 @@ public class Game {
                 {new Point(0,1), new Point(1,1), new Point(1,0), new Point(2,0)},
                 {new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,2)}
             });
-            
-            boards = new Board[2];
-            boards[0] = new Board(new Player(true, 1), seed, 10, 10);
-            boards[1] = new Board(new Player(true, 1), seed, 310, 10);
-            
             step = 0;
             
 	}
 
-	public void resetGame() {
+	public void resetGame(float[] playerOne, float[] playerTwo) {
             boards = new Board[2];
-            seed += 1;
-            boards[0] = new Board(new Player(true, 1), seed, 10, 10);
-            boards[1] = new Board(new Player(true, 1), seed, 310, 10);
+            gameEnded = false;
+            
+            boards[0] = new Board(new Player(true, playerOne), seed, 10, 10);
+            boards[1] = new Board(new Player(true, playerTwo), seed, 310, 10);
 	}
         
         public void drawGame(ShapeRenderer renderer, BitmapFont font, SpriteBatch batch){
@@ -107,10 +109,9 @@ public class Game {
             
             // Draw step and score values
             batch.begin();
-            font.draw(batch, "Step", 240, 480);
-            font.draw(batch, String.valueOf(step), 260, 450);
-            font.draw(batch, "Score", 240, 420);
-            font.draw(batch, String.valueOf(boards[0].getScore()), 260, 390);
+            font.draw(batch, String.format("Step\n%s", step), 220, 480);
+            font.draw(batch, String.format("Score\n%s", boards[0].getScore()) , 220, 440);
+            font.draw(batch, String.format("Lines\n%s", boards[0].linesClear), 270, 480);
             batch.end();
             
         }
@@ -133,7 +134,10 @@ public class Game {
             
             // Someone has lost, reset game.
             if(!boards[0].isAlive() || !boards[1].isAlive()){
-                resetGame();
+                gameEnded = true;
+                results[0] = boards[0].getResults();
+                results[1] = boards[1].getResults();
+                
             }
             step++;
         }

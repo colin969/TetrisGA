@@ -1,4 +1,4 @@
-package dsp.tetris;
+package dsp.main;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -8,6 +8,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import dsp.ga.GA;
+import dsp.tetris.Game;
 
 public class TetrisGA extends ApplicationAdapter {
 	SpriteBatch batch;
@@ -15,14 +17,27 @@ public class TetrisGA extends ApplicationAdapter {
 	Texture img;
         private static Game game;
         private static ShapeRenderer shapeRenderer;
-        private static float gameUpdateRate = 0.05F;
+        private static float gameUpdateRate = 0.1F;
         private static float timePassed;
+        private static float[] test;
+        private int gameNumber;
+        private int lastGen;
+        
+        private GA ga;
 	
 	@Override
 	public void create () {
+                ga = new GA();
+                ga.init();
+            
                 game = new Game();
                 game.init();
                 timePassed = 0;
+                gameNumber = 1;
+                test = ga.getRandom();
+                lastGen = 0;
+                
+                game.resetGame(ga.startGame(), test);
                 
                 shapeRenderer = new ShapeRenderer();
                 shapeRenderer.setAutoShapeType(true);
@@ -36,6 +51,17 @@ public class TetrisGA extends ApplicationAdapter {
 	@Override
 	public void render () {
                 timePassed += Gdx.graphics.getDeltaTime();
+                
+                if(game.gameEnded){
+                    ga.returnResults(game.results);
+                    game.resetGame(ga.startGame(), test);
+                    gameNumber++;
+                    if(ga.getGen() % 5 == 0 && ga.getGen() != lastGen){
+                        test = ga.getRandom();
+                        lastGen = ga.getGen();
+                    }
+                }
+                
                 while(timePassed > gameUpdateRate){
                     timePassed = 0;
                     game.doStep();
@@ -43,6 +69,12 @@ public class TetrisGA extends ApplicationAdapter {
                 
 		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+                
+                batch.begin();
+                font.draw(batch, String.format("Generation\n%s", ga.getGen()), 220, 100);
+                font.draw(batch, String.format("Individual\n%s of %s", ga.getGenNum(), ga.getGenNumMax()), 220, 60);
+                batch.end();
+                
                 game.drawGame(shapeRenderer, font, batch);
 	}
 	
