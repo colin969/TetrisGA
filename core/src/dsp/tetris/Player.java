@@ -13,11 +13,13 @@ import java.util.Random;
  * @author Colin Berry
  */
 public class Player {
+    
+        private boolean debug;
 
-        public Player(boolean cpu, float[] genome){
-            this.genome = new float[1];
+        public Player(boolean cpu, float[] genome, boolean debug){
             this.genome = genome;
             this.cpu = cpu;
+            this.debug = debug;
         }
     
 	private boolean cpu;
@@ -32,22 +34,27 @@ public class Player {
             
             // Set initial move
             bestAction = actions.get(0);
-            bestScore += genome[0] * (float)bestAction.holes;
-            bestScore += genome[1] * (float)bestAction.clears;
-            bestScore += genome[2] * (float)bestAction.height;
+            if(bestAction.clears > 0)
+                bestScore += genome[bestAction.clears-1];
+            bestScore += genome[4] * (float)bestAction.holes;
+            bestScore += genome[5] * (float)bestAction.height;
+            bestScore += genome[6] * (float)bestAction.aggregateHeight;
             
             // Find best move(s)
             for(Action action : actions){
                 float totalScore = 0;
-                totalScore += genome[0] * (float)action.holes;
-                totalScore += genome[1] * (float)action.clears;
-                totalScore += genome[2] * (float)action.height;
+                if(action.clears > 0)
+                    totalScore += genome[action.clears-1];
+                totalScore += genome[4] * (float)action.holes;
+                totalScore += genome[5] * (float)action.height;
+                totalScore += genome[6] * (float)action.aggregateHeight;
                 if(totalScore > bestScore){
                     bestAction = action;
                     bestScore = totalScore;
                 }
             }
-            
+            if(debug)
+                System.out.println(bestAction);
             return bestAction;
         }
         

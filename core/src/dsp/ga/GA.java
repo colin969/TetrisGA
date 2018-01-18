@@ -12,15 +12,13 @@ import java.util.Random;
  * @author Colin Berry
  */
 public class GA {
-    public static void main(String[] args) {
-        
-    }
+    private int weights = 7;
     
     Population pop;
     Individual workingInd;
     
     public void init(){
-        pop = new Population(10, 3, 0.95F, 0.08F);
+        pop = new Population(10, weights, 0.95F, 0.08F);
         
         
     }
@@ -41,6 +39,10 @@ public class GA {
     
     public float[] getRandom(){
         return pop.pop.get((new Random()).nextInt(10)).weights;
+    }
+    
+    public float[] getBest(){
+        return pop.getBest();
     }
     
     public int getGen(){

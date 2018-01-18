@@ -48,7 +48,7 @@ public class Board {
         public int garbageLevel;
         public int results;
         public int linesClear;
-        private int step;
+        int step;
 
 	private int pieceNumber;
 
@@ -59,7 +59,7 @@ public class Board {
 	private Player player;
 
 	public Board(Player player, int seed, int xAnchor, int yAnchor) {
-            step = 0;
+            step = 1;
             linesClear = 0;
             board =  new Color[10][24];
             results = 1;
@@ -340,6 +340,19 @@ public class Board {
         
         // Return an array of Column by Rotation values for the CPU player to choose from
 	public ArrayList<Action> cpuGetAllActions() {
+                int[] colHeights = new int[10];
+                int[] colChange;
+                int curHeight;
+                for(int col = 0; col < 10; col++){
+                    curHeight = 0;
+                    for(int y = 0; y < 24; y++){
+                        if(board[col][y] != background){
+                            curHeight = y;
+                        }
+                    }
+                    colHeights[col] = curHeight;
+                }
+            
                 ArrayList<Action> validActions = new ArrayList();
                 for(int col = -2; col < 9; col++){
                     for(int rot = 0; rot < 4; rot++){
@@ -356,13 +369,26 @@ public class Board {
                             // Get number of holes it would produce
                             action.holes = boardCheckHoles(new Point(col, y), activePiece.point[rot]);
                             
+                            colChange = new int[10];
+                            for(int i = 0; i < 10; i++)
+                                colChange[i] = 0;
+                            
                             // Get stack height of choice
                             action.height = 0;
                             for(Point p : activePiece.point[rot]){
                                 int tempY = p.y + y;
                                 if(tempY > action.height)
                                     action.height = tempY;
+                                if(colChange[action.origin.x + p.x] < tempY)
+                                    colChange[action.origin.x + p.x] = tempY;
                             }
+                            
+                            int aggregateHeight = 0;
+                            for(int colHeight = 0; colHeight < 10; colHeight++){
+                                aggregateHeight += colChange[colHeight] == 0 ? colHeights[colHeight] : colChange[colHeight] ;
+                            }
+                            action.aggregateHeight = aggregateHeight;
+                            
                             validActions.add(action);
                         }
                     }
@@ -443,9 +469,9 @@ public class Board {
     int getResults() {
         results = this.score;
         if(isAlive)
-            results += 100000/step;
+            results += 1000000/step;
         else
-            results -= 100000/step;
+            results -= 1000000/step;
         return results;
     }
 

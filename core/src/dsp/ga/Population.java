@@ -6,6 +6,7 @@
 package dsp.ga;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 /**
@@ -19,10 +20,11 @@ public class Population {
     public Individual nextToEval;
     
     int popSize;
+    private float elitism = 0.2F;
+    private float mutationDelta = 0.2F;
     private int numOfFloats;
     private float crossover;
     private float mutation;
-    private float upperBound;
     public int generation;
     boolean isEvaluating;
     
@@ -73,7 +75,12 @@ public class Population {
         ArrayList<Individual> newPop = new ArrayList();
         Random rand = new Random();
         
-        for(int i = 0; i < popSize; i++){
+        Collections.sort(pop);       
+        for(int i = 0; i < (int)((float) popSize * elitism); i++){
+            newPop.add(pop.get(popSize-(i+1)));
+        }
+        
+        for(int i = 0; i < (int)((float) popSize * (1F - elitism)); i++){
             Individual parent1 = tempPop.get(rand.nextInt(popSize));
             Individual parent2 = tempPop.get(rand.nextInt(popSize));
             
@@ -120,7 +127,7 @@ public class Population {
         for(Individual i : tempPop){
             for(int w = 0; w < numOfFloats; w++){
                 if(rand.nextFloat() < mutation){
-                    i.weights[w] = rand.nextFloat() * (rand.nextBoolean() ? 1 : -1);
+                    i.weights[w] += mutationDelta * (rand.nextBoolean() ? 1 : -1) * rand.nextFloat();
                 }
             }
         }
@@ -141,6 +148,21 @@ public class Population {
         evalStep++; 
         evaluate();
     }
+
+    public float[] getBest() {
+        float[] best = pop.get(0).weights;
+        int bestFitness = pop.get(0).fitness;
+        
+        for(Individual ind : pop){
+            if(ind.fitness > bestFitness){
+                best = ind.weights;
+                bestFitness = ind.fitness;
+            }
+        }
+        
+        return best;
+    }
+    
     
     
 }

@@ -15,17 +15,23 @@ public class Action {
 
         public int clears;
         public int height;
+        public int aggregateHeight;
         public int holes;
         public int blockades;
         public Point origin;
         public int rot;
         
-        public Action(int clears, int height, int holes, int blockades){}
+        public Action(int clears, int height, int holes, int blockades, int aggregateHeight){}
         
         public Action(){}
     
 	private String type;
 
 	private int score;
+        
+        @Override
+        public String toString(){
+            return String.format("Holes %s - Height %s - Aggregate Height %s - Clears %s", holes, height, aggregateHeight, clears);
+        }
 
 }

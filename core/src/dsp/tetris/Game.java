@@ -28,10 +28,16 @@ public class Game {
         public boolean gameEnded;
 
 	public Board[] boards;
+        
+        public boolean garbage;
+        
+        public boolean singlePlayer;
 
 	public void init() {
             results = new int[2];
             gameEnded = false;
+            garbage = true;
+            singlePlayer = false;
             tetrominoes = new Tetromino[7];
             // I Block
             tetrominoes[0] = new Tetromino(Color.CYAN, new Point[][]{
@@ -96,8 +102,8 @@ public class Game {
             boards = new Board[2];
             gameEnded = false;
             
-            boards[0] = new Board(new Player(true, playerOne), seed, 10, 10);
-            boards[1] = new Board(new Player(true, playerTwo), seed, 310, 10);
+            boards[0] = new Board(new Player(true, playerOne, true), seed, 10, 10);
+            boards[1] = new Board(new Player(true, playerTwo, false), seed, 310, 10);
 	}
         
         public void drawGame(ShapeRenderer renderer, BitmapFont font, SpriteBatch batch){
@@ -117,19 +123,22 @@ public class Game {
         }
         
         public void doStep(){
-//            System.out.println("BOARD 1");
             boards[0].doStep();
-//            System.out.println("BOARD 2");
-            boards[1].doStep();
+            if(!singlePlayer)
+                boards[1].doStep();
+            else
+                boards[1].step++;
             
             // Move any garbage created to other board
-            if(boards[0].garbageLevel > 0){
-                boards[1].queueGarbage(boards[0].garbageLevel);
-                boards[0].garbageLevel = 0;
-            }
-            if(boards[1].garbageLevel > 0){
-                boards[0].queueGarbage(boards[1].garbageLevel);
-                boards[1].garbageLevel = 0;
+            if(garbage){
+                if(boards[0].garbageLevel > 0){
+                    boards[1].queueGarbage(boards[0].garbageLevel);
+                    boards[0].garbageLevel = 0;
+                }
+                if(boards[1].garbageLevel > 0){
+                    boards[0].queueGarbage(boards[1].garbageLevel);
+                    boards[1].garbageLevel = 0;
+                }
             }
             
             // Someone has lost, reset game.

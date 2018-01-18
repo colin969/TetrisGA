@@ -22,7 +22,6 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
         private static float gameUpdateRate = 0.2F;
         private static float timePassed;
         private static float[] test;
-        private int gameNumber;
         private int lastGen;
         private boolean partialRender;
         private float savedUpdateRate;
@@ -37,9 +36,8 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 game = new Game();
                 game.init();
                 timePassed = 0;
-                gameNumber = 1;
                 test = ga.getRandom();
-                lastGen = 0;
+                lastGen = 1;
                 
                 game.resetGame(ga.startGame(), test);
                 
@@ -63,9 +61,8 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 if(game.gameEnded){
                     ga.returnResults(game.results);
                     game.resetGame(ga.startGame(), test);
-                    gameNumber++;
-                    if(ga.getGen() % 5 == 0 && ga.getGen() != lastGen){
-                        test = ga.getRandom();
+                    if(ga.getGen() != lastGen){
+                        test = ga.getBest();
                         lastGen = ga.getGen();
                     }
                 }
@@ -96,12 +93,14 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
         
         @Override
         public boolean keyDown(int keycode) {
+            // Adjust step change if shift is held
             float step = 0.05F;
             if(Gdx.input.isKeyJustPressed(Keys.SHIFT_LEFT)){
-                step = 0.25F;
+                step = 0.5F;
             }
             
-            if(keycode == Keys.P){
+            // Disable board rendering - TODO : Tweaks to show rest of UI
+            if(keycode == Keys.R){
                 partialRender = !partialRender;
                 if(partialRender){
                     savedUpdateRate = gameUpdateRate;
@@ -111,6 +110,17 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 }
             }
             
+            // Stop/start garbage
+            if(keycode == Keys.G){
+                game.garbage = !game.garbage;
+            }
+            
+            // Stop/start second board
+            if(keycode == Keys.P){
+                game.singlePlayer = !game.singlePlayer;
+            }
+            
+            // Change step speed
             if(keycode == Keys.LEFT_BRACKET){
                 gameUpdateRate += step;
             }
