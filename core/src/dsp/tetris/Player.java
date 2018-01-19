@@ -39,6 +39,7 @@ public class Player {
             bestScore += genome[4] * (float)bestAction.holes;
             bestScore += genome[5] * (float)bestAction.height;
             bestScore += genome[6] * (float)bestAction.aggregateHeight;
+            bestScore += genome[7] * (float)bestAction.bumpiness;
             
             // Find best move(s)
             for(Action action : actions){
@@ -48,6 +49,7 @@ public class Player {
                 totalScore += genome[4] * (float)action.holes;
                 totalScore += genome[5] * (float)action.height;
                 totalScore += genome[6] * (float)action.aggregateHeight;
+                totalScore += genome[7] * (float)action.bumpiness;
                 if(totalScore > bestScore){
                     bestAction = action;
                     bestScore = totalScore;
@@ -60,6 +62,10 @@ public class Player {
         
         public boolean getCpu(){
             return this.cpu;
+        }
+        
+        public void debug(){
+            debug = !debug;
         }
 
 }

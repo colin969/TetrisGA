@@ -33,6 +33,8 @@ public class Game {
         public boolean garbage;
         
         public boolean singlePlayer;
+        
+        public int stepsPerPermagarbage = 150;
 
 	public void init() {
             results = new int[2];
@@ -95,15 +97,15 @@ public class Game {
                 {new Point(0,1), new Point(1,1), new Point(1,0), new Point(2,0)},
                 {new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,2)}
             });
-            step = 0;
             
 	}
 
 	public void resetGame(float[] playerOne, float[] playerTwo) {
             boards = new Board[2];
             gameEnded = false;
+            step = 1;
             
-            boards[0] = new Board(new Player(true, playerOne, false), seed, 10, 10);
+            boards[0] = new Board(new Player(true, playerOne, true), seed, 10, 10);
             boards[1] = new Board(new Player(true, playerTwo, false), seed, 310, 10);
 	}
         
@@ -116,7 +118,7 @@ public class Game {
             
             // Draw step and score values
             batch.begin();
-            font.draw(batch, String.format("Step\n%s", step), 220, 480);
+            font.draw(batch, String.format("Piece\n%s", step), 220, 480);
             font.draw(batch, String.format("Score\n%s", boards[0].getScore()) , 220, 440);
             font.draw(batch, String.format("Lines\n%s", boards[0].linesClear), 270, 480);
             batch.end();
@@ -124,6 +126,13 @@ public class Game {
         }
         
         public void doStep(){
+            if(step % stepsPerPermagarbage == 0){
+                System.out.println("Added perma");
+                boards[0].addPerma();
+                if(!singlePlayer)
+                    boards[1].addPerma();
+            }
+            
             boards[0].doStep();
             if(!singlePlayer)
                 boards[1].doStep();
@@ -153,7 +162,11 @@ public class Game {
         }
 
 	public Board getBoard(int id) {
-		return null;
+		return boards[id];
 	}
+        
+        public void updateSeed(){
+            seed = (new Random()).nextInt();
+        }
 
 }

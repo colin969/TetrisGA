@@ -12,7 +12,7 @@ import java.util.Random;
  * @author Colin Berry
  */
 public class GA {
-    private int weights = 7;
+    private int weights = 8;
     
     Population pop;
     Individual workingInd;

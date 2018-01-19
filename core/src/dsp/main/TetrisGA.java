@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import dsp.ga.GA;
 import dsp.tetris.Game;
+import dsp.tetris.Player;
 
 public class TetrisGA extends ApplicationAdapter implements InputProcessor {
 	SpriteBatch batch;
@@ -25,6 +26,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
         private int lastGen;
         private boolean partialRender;
         private float savedUpdateRate;
+        private boolean paused;
         
         private GA ga;
 	
@@ -50,6 +52,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 font.setColor(Color.BLACK);
                 
                 partialRender = false;
+                paused = false;
                 
                 Gdx.input.setInputProcessor(this);
 	}
@@ -58,32 +61,37 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
 	public void render () {
                 timePassed += Gdx.graphics.getDeltaTime();
                 
-                if(game.gameEnded){
-                    ga.returnResults(game.results);
-                    game.resetGame(ga.startGame(), test);
-                    if(ga.getGen() != lastGen){
-                        test = ga.getBest();
-                        lastGen = ga.getGen();
-                        ga.printGen();
+                if(!paused){
+                    if(game.gameEnded){
+                        ga.returnResults(game.results);
+                        game.resetGame(ga.startGame(), test);
+                        if(ga.getGen() != lastGen){
+                            test = ga.getBest();
+                            lastGen = ga.getGen();
+                            ga.printGen();
+                            game.updateSeed();
+                        }
+                    }
+
+                    while(timePassed > gameUpdateRate){
+                        timePassed = 0;
+                        game.doStep();
                     }
                 }
                 
-                while(timePassed > gameUpdateRate){
-                    timePassed = 0;
-                    game.doStep();
-                }
                 
-                
-                    Gdx.gl.glClearColor(1, 1, 1, 1);
-                    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-                    
-                    batch.begin();
-                    font.draw(batch, String.format("Generation\n%s", ga.getGen()), 220, 100);
-                    font.draw(batch, String.format("Individual\n%s of %s", ga.getGenNum(), ga.getGenNumMax()), 220, 60);
-                    batch.end();
-                    
-                    if(!partialRender)
-                        game.drawGame(shapeRenderer, font, batch);
+                Gdx.gl.glClearColor(1, 1, 1, 1);
+                Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+                batch.begin();
+                font.draw(batch, String.format("Generation\n%s", ga.getGen()), 220, 100);
+                font.draw(batch, String.format("Individual\n%s of %s", ga.getGenNum(), ga.getGenNumMax()), 220, 60);
+                if(paused)
+                    font.draw(batch, "P A U S E D", 220, 200);
+                batch.end();
+
+                if(!partialRender)
+                    game.drawGame(shapeRenderer, font, batch);
 	}
 	
 	@Override
@@ -119,6 +127,17 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
             // Stop/start second board
             if(keycode == Keys.P){
                 game.singlePlayer = !game.singlePlayer;
+            }
+            
+            // Pause/unpause game
+            if(keycode == Keys.SPACE){
+                paused = !paused;
+            }
+            
+            // Enable action debug
+            if(keycode == Keys.A){
+                Player player = game.getBoard(0).getPlayer();
+                player.debug();
             }
             
             // Change step speed

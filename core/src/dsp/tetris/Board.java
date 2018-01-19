@@ -34,6 +34,8 @@ public class Board {
     
 	private Color[][] board;
         private Color background = Color.LIGHT_GRAY;
+        private Color permaGarbage = Color.DARK_GRAY;
+        private int permaGarbageRows;
         private Color[] clearRow;
         private boolean isAlive;
         private int queuedGarbage;
@@ -62,6 +64,8 @@ public class Board {
 	public Board(Player player, int seed, int xAnchor, int yAnchor) {
             step = 1;
             linesClear = 0;
+            permaGarbageRows = 0;
+            
             board =  new Color[10][24];
             results = 1;
             for (int x = 0; x < 10; x++) {
@@ -170,24 +174,26 @@ public class Board {
                     queuedGarbage -= garbageLevel;
                     if(queuedGarbage < 0)
                         garbageLevel = Math.abs(queuedGarbage);
+                    
+                    
                 }
                 comboLevel++;
                 
             } else {
+                garbageHole = garbageRand.nextInt(10);
                 while(queuedGarbage > 0){
                     // Move up a line for each line of garbage
                     // 9/10 chance to change garbage hole
-                    garbageHole = garbageRand.nextInt(10);
-                    for(int oldRow = 23; oldRow >= 1; oldRow--){
+                    for(int oldRow = 23; oldRow >= permaGarbageRows+1; oldRow--){
                         for(int col = 0; col < 10; col++){
                             board[col][oldRow] = board[col][oldRow-1];
                         }
                     }
                     for(int col = 0; col < 10; col++){
                         if(col != garbageHole)
-                            board[col][0] = Color.GRAY;
+                            board[col][permaGarbageRows] = Color.GRAY;
                         else
-                            board[col][0] = background;
+                            board[col][permaGarbageRows] = background;
                     }
                     queuedGarbage--;
                 }
@@ -204,7 +210,7 @@ public class Board {
                 if(row >= 0){
                     clear = true;
                     for(int col = 0; col < 10; col++){
-                        if(board[col][row] == background){
+                        if(board[col][row] == background || board[col][row] == permaGarbage){
                             clear = false;
                             break;
                         }
@@ -237,7 +243,7 @@ public class Board {
                 boolean clear = true;
                 if(y >= 0){
                     for(int x = 0; x < 10; x++){
-
+                        // If space not filled, check if piece fits space (if not, no clear!)
                         if(board[x][y] == background){
                             for(Point p : piece){
                                 if(p.x + col == x && p.y + placedY == y)
@@ -361,7 +367,7 @@ public class Board {
                     curHeight = 0;
                     for(int y = 0; y < 24; y++){
                         if(board[col][y] != background){
-                            curHeight = y;
+                            curHeight = y+1;
                         }
                     }
                     colHeights[col] = curHeight;
@@ -396,15 +402,22 @@ public class Board {
                             int tempY = p.y + y;
                             if(tempY > action.height)
                                 action.height = tempY;
-                            if(colChange[action.origin.x + p.x] < tempY)
-                                colChange[action.origin.x + p.x] = tempY;
+                            if(colChange[action.origin.x + p.x] < tempY+1)
+                                colChange[action.origin.x + p.x] = tempY+1;
                         }
 
                         int aggregateHeight = 0;
+                        int bumpiness = 0;
                         for(int colHeight = 0; colHeight < 10; colHeight++){
-                            aggregateHeight += colChange[colHeight] == 0 ? colHeights[colHeight] : colChange[colHeight] ;
+                            int firstHeight = colChange[colHeight] == 0 ? colHeights[colHeight] : colChange[colHeight];
+                            if(colHeight < 9){
+                                int secondHeight = colChange[colHeight+1] == 0 ? colHeights[colHeight+1] : colChange[colHeight+1];
+                                bumpiness += Math.abs(firstHeight - secondHeight);
+                            }
+                            aggregateHeight += firstHeight;
                         }
                         action.aggregateHeight = aggregateHeight;
+                        action.bumpiness = bumpiness;
 
                         validActions.add(action);
                     }
@@ -505,6 +518,25 @@ public class Board {
             activePiece = holdPiece;
             holdPiece = swapPiece;
         }
+    }
+    
+    public void addPerma(){
+        // Move up a line for each line of garbage
+
+        for(int oldRow = 23; oldRow >= 1; oldRow--){
+            for(int col = 0; col < 10; col++){
+                board[col][oldRow] = board[col][oldRow-1];
+            }
+        }
+        for(int col = 0; col < 10; col++){
+            board[col][0] = permaGarbage;
+        }
+        
+        permaGarbageRows++;
+    }
+
+    public Player getPlayer() {
+        return player;
     }
 
 }

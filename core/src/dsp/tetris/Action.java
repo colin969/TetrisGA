@@ -17,7 +17,8 @@ public class Action {
         public int height;
         public int aggregateHeight;
         public int holes;
-        public int blockades;
+        public int bumpiness;
+        //public int blockades;
         public Point origin;
         public int rot;
         public boolean swap;
@@ -32,7 +33,7 @@ public class Action {
         
         @Override
         public String toString(){
-            return String.format("Holes %s - Height %s - Aggregate Height %s - Clears %s", holes, height, aggregateHeight, clears);
+            return String.format("Holes %s - Height %s - Aggregate Height %s - Clears %s - Bumpiness %s", holes, height, aggregateHeight, clears, bumpiness);
         }
 
 }
