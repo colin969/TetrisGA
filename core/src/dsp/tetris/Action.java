@@ -20,6 +20,7 @@ public class Action {
         public int blockades;
         public Point origin;
         public int rot;
+        public boolean swap;
         
         public Action(int clears, int height, int holes, int blockades, int aggregateHeight){}
         

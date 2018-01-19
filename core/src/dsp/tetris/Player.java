@@ -26,7 +26,7 @@ public class Player {
 
 	private float[] genome;
         
-        // SIMPLE AI - Build without holes, best clears, then lowest height
+        // Choose move based on weights
         public Action nextMove(ArrayList<Action> actions){
             
             Action bestAction = null;

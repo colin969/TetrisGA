@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import java.awt.Point;
+import java.util.Random;
 
 /**
  *
@@ -102,7 +103,7 @@ public class Game {
             boards = new Board[2];
             gameEnded = false;
             
-            boards[0] = new Board(new Player(true, playerOne, true), seed, 10, 10);
+            boards[0] = new Board(new Player(true, playerOne, false), seed, 10, 10);
             boards[1] = new Board(new Player(true, playerTwo, false), seed, 310, 10);
 	}
         

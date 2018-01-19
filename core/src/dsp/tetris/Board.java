@@ -42,6 +42,7 @@ public class Board {
 
 	public Tetromino activePiece;
         public Queue<Tetromino> nextPieces;
+        public Tetromino holdPiece;
         public Point pieceOrigin;
         public int pieceRot;
         public int comboLevel;
@@ -86,6 +87,7 @@ public class Board {
             List<Tetromino> toAdd = Arrays.asList(Game.tetrominoes);
             Collections.shuffle(toAdd, pieceGen);
             nextPieces.addAll(toAdd);
+            holdPiece = nextPieces.remove();
 	}
 
 	public void doStep() {
@@ -97,11 +99,15 @@ public class Board {
             }
             
             if(player.getCpu() && isAlive){
+                if(holdPiece == null){
+                    this.hold();
+                    return;
+                }
                 ArrayList<Action> actions = cpuGetAllActions();
                 if(!actions.isEmpty()){
                     Action action = player.nextMove(actions);
                     if(action != null){
-                        this.cpuDrop(action.origin, action.rot);
+                        this.cpuDrop(action.origin, action.rot, action.swap);
                     }
                 } else {
                     this.isAlive = false;
@@ -162,7 +168,8 @@ public class Board {
                 // Garbage cancelling
                 if(queuedGarbage > 0){
                     queuedGarbage -= garbageLevel;
-                    garbageLevel = Math.abs(queuedGarbage);
+                    if(queuedGarbage < 0)
+                        garbageLevel = Math.abs(queuedGarbage);
                 }
                 comboLevel++;
                 
@@ -340,7 +347,14 @@ public class Board {
         
         // Return an array of Column by Rotation values for the CPU player to choose from
 	public ArrayList<Action> cpuGetAllActions() {
-                int[] colHeights = new int[10];
+            ArrayList<Action> validActions = new ArrayList();
+            validActions.addAll(getActionsForPiece(activePiece, false));
+            validActions.addAll(getActionsForPiece(holdPiece, true));
+            return validActions;
+	}
+        
+        private ArrayList<Action> getActionsForPiece(Tetromino piece, boolean swap){
+            int[] colHeights = new int[10];
                 int[] colChange;
                 int curHeight;
                 for(int col = 0; col < 10; col++){
@@ -353,53 +367,60 @@ public class Board {
                     colHeights[col] = curHeight;
                 }
             
-                ArrayList<Action> validActions = new ArrayList();
-                for(int col = -2; col < 9; col++){
-                    for(int rot = 0; rot < 4; rot++){
-                        Action action = new Action();
-                        action.rot = rot;
-                        // Make sure action is in bounds before finding lowest point to use
-                        if(getValid(col, 20, activePiece.point[rot])){
-                            int y = getLowestValid(col, 20, activePiece.point[rot]);
-                            action.origin = new Point(col, y);
-                            
-                            // Get number of line clears
-                            action.clears = boardCheckClears(col, y, activePiece.point[rot]);
-                            
-                            // Get number of holes it would produce
-                            action.holes = boardCheckHoles(new Point(col, y), activePiece.point[rot]);
-                            
-                            colChange = new int[10];
-                            for(int i = 0; i < 10; i++)
-                                colChange[i] = 0;
-                            
-                            // Get stack height of choice
-                            action.height = 0;
-                            for(Point p : activePiece.point[rot]){
-                                int tempY = p.y + y;
-                                if(tempY > action.height)
-                                    action.height = tempY;
-                                if(colChange[action.origin.x + p.x] < tempY)
-                                    colChange[action.origin.x + p.x] = tempY;
-                            }
-                            
-                            int aggregateHeight = 0;
-                            for(int colHeight = 0; colHeight < 10; colHeight++){
-                                aggregateHeight += colChange[colHeight] == 0 ? colHeights[colHeight] : colChange[colHeight] ;
-                            }
-                            action.aggregateHeight = aggregateHeight;
-                            
-                            validActions.add(action);
+            ArrayList<Action> validActions = new ArrayList();
+            
+            for(int col = -2; col < 9; col++){
+                for(int rot = 0; rot < 4; rot++){
+                    Action action = new Action();
+                    action.rot = rot;
+                    // Make sure action is in bounds before finding lowest point to use
+                    if(getValid(col, 20, piece.point[rot])){
+                        action.swap = swap;
+
+                        int y = getLowestValid(col, 20, piece.point[rot]);
+                        action.origin = new Point(col, y);
+
+                        // Get number of line clears
+                        action.clears = boardCheckClears(col, y, piece.point[rot]);
+
+                        // Get number of holes it would produce
+                        action.holes = boardCheckHoles(new Point(col, y), piece.point[rot]);
+
+                        colChange = new int[10];
+                        for(int i = 0; i < 10; i++)
+                            colChange[i] = 0;
+
+                        // Get stack height of choice
+                        action.height = 0;
+                        for(Point p : piece.point[rot]){
+                            int tempY = p.y + y;
+                            if(tempY > action.height)
+                                action.height = tempY;
+                            if(colChange[action.origin.x + p.x] < tempY)
+                                colChange[action.origin.x + p.x] = tempY;
                         }
+
+                        int aggregateHeight = 0;
+                        for(int colHeight = 0; colHeight < 10; colHeight++){
+                            aggregateHeight += colChange[colHeight] == 0 ? colHeights[colHeight] : colChange[colHeight] ;
+                        }
+                        action.aggregateHeight = aggregateHeight;
+
+                        validActions.add(action);
                     }
                 }
-                return validActions;
-	}
+            }
+            return validActions;
+        }
 
         // Drop by a CPU, guaranteed valid move.
-	public void cpuDrop(Point origin, int rot) {
+	public void cpuDrop(Point origin, int rot, boolean swap) {
             
-            // TODO: Check for collision on Y > 20
+            if(swap){
+                Tetromino swapPiece = activePiece;
+                activePiece = holdPiece;
+                holdPiece = swapPiece;
+            }
             
             pieceOrigin = origin;
             pieceRot = rot;
@@ -473,6 +494,17 @@ public class Board {
         else
             results -= 1000000/step;
         return results;
+    }
+
+    private void hold() {
+        if(holdPiece == null){
+            holdPiece = activePiece;
+            addPiece();
+        } else {
+            Tetromino swapPiece = activePiece;
+            activePiece = holdPiece;
+            holdPiece = swapPiece;
+        }
     }
 
 }

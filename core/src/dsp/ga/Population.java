@@ -149,18 +149,16 @@ public class Population {
         evaluate();
     }
 
-    public float[] getBest() {
-        float[] best = pop.get(0).weights;
-        int bestFitness = pop.get(0).fitness;
+    public Individual getBest() {
+        Individual bestInd = pop.get(0);
         
         for(Individual ind : pop){
-            if(ind.fitness > bestFitness){
-                best = ind.weights;
-                bestFitness = ind.fitness;
+            if(ind.fitness > bestInd.fitness){
+                bestInd = ind;
             }
         }
         
-        return best;
+        return bestInd;
     }
     
     

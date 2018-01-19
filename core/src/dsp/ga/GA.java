@@ -42,7 +42,7 @@ public class GA {
     }
     
     public float[] getBest(){
-        return pop.getBest();
+        return pop.getBest().weights;
     }
     
     public int getGen(){
@@ -55,6 +55,10 @@ public class GA {
     
     public int getGenNumMax(){
         return pop.popSize;
+    }
+
+    public void printGen() {
+        System.out.println(String.format("Best Individual\n%s", pop.getBest()));
     }
     
     

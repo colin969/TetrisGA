@@ -5,6 +5,8 @@
  */
 package dsp.ga;
 
+import java.util.Arrays;
+
 /**
  *
  * @author Colin Berry
@@ -20,5 +22,10 @@ public class Individual implements Comparable{
         } else {
             return this.fitness - ((Individual) ind).fitness;
         }
+    }
+    
+    @Override
+    public String toString(){
+        return String.format("Weights - %s\nFitness - %s", Arrays.toString(weights), fitness);
     }
 }
