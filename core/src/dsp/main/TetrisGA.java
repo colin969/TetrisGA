@@ -24,7 +24,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
         private static float timePassed;
         private static float[] test;
         private int lastGen;
-        private boolean partialRender;
+        private boolean fullRender;
         private float savedUpdateRate;
         private boolean paused;
         
@@ -38,7 +38,8 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 game = new Game();
                 game.init();
                 timePassed = 0;
-                test = ga.getRandom();
+                //test = ga.getRandom();
+                test = new float[]{-0.8744863F, 0.025707256F, 0.2459504F, -0.14321329F, -0.67774916F, -0.33289695F, -0.77588874F, -0.49761575F};
                 lastGen = 1;
                 
                 game.resetGame(ga.startGame(), test);
@@ -51,7 +52,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 font = new BitmapFont();
                 font.setColor(Color.BLACK);
                 
-                partialRender = false;
+                fullRender = true;
                 paused = false;
                 
                 Gdx.input.setInputProcessor(this);
@@ -62,17 +63,19 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 timePassed += Gdx.graphics.getDeltaTime();
                 
                 if(!paused){
+                    // Game ended, process results, start next game
                     if(game.gameEnded){
                         ga.returnResults(game.results);
-                        game.resetGame(ga.startGame(), test);
                         if(ga.getGen() != lastGen){
                             test = ga.getBest();
                             lastGen = ga.getGen();
                             ga.printGen();
                             game.updateSeed();
                         }
+                        game.resetGame(ga.startGame(), test);
                     }
-
+                    
+                    // Do game step
                     while(timePassed > gameUpdateRate){
                         timePassed = 0;
                         game.doStep();
@@ -83,6 +86,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 Gdx.gl.glClearColor(1, 1, 1, 1);
                 Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+                // Print running Generation and progress through population
                 batch.begin();
                 font.draw(batch, String.format("Generation\n%s", ga.getGen()), 220, 100);
                 font.draw(batch, String.format("Individual\n%s of %s", ga.getGenNum(), ga.getGenNumMax()), 220, 60);
@@ -90,8 +94,8 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                     font.draw(batch, "P A U S E D", 220, 200);
                 batch.end();
 
-                if(!partialRender)
-                    game.drawGame(shapeRenderer, font, batch);
+                // Only render boards
+                game.drawGame(shapeRenderer, font, batch, fullRender);
 	}
 	
 	@Override
@@ -108,10 +112,10 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 step = 0.5F;
             }
             
-            // Disable board rendering - TODO : Tweaks to show rest of UI
+            // Disable board rendering, puts to full speed - TODO : Tweaks to show rest of UI
             if(keycode == Keys.R){
-                partialRender = !partialRender;
-                if(partialRender){
+                fullRender = !fullRender;
+                if(fullRender){
                     savedUpdateRate = gameUpdateRate;
                     gameUpdateRate = 0;
                 } else {
@@ -125,7 +129,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
             }
             
             // Stop/start second board
-            if(keycode == Keys.P){
+            if(keycode == Keys.S){
                 game.singlePlayer = !game.singlePlayer;
             }
             

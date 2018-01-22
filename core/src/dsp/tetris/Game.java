@@ -105,16 +105,18 @@ public class Game {
             gameEnded = false;
             step = 1;
             
-            boards[0] = new Board(new Player(true, playerOne, true), seed, 10, 10);
+            boards[0] = new Board(new Player(true, playerOne, false), seed, 10, 10);
             boards[1] = new Board(new Player(true, playerTwo, false), seed, 310, 10);
 	}
         
-        public void drawGame(ShapeRenderer renderer, BitmapFont font, SpriteBatch batch){
+        public void drawGame(ShapeRenderer renderer, BitmapFont font, SpriteBatch batch, boolean renderBoard){
             // Draw boards
-            renderer.begin();
-            boards[0].draw(renderer);
-            boards[1].draw(renderer);
-            renderer.end();
+            if(renderBoard){
+                renderer.begin();
+                boards[0].draw(renderer);
+                boards[1].draw(renderer);
+                renderer.end();
+            }
             
             // Draw step and score values
             batch.begin();
@@ -126,13 +128,14 @@ public class Game {
         }
         
         public void doStep(){
+            // Add permanent garbage every specified number of steps
             if(step % stepsPerPermagarbage == 0){
-                System.out.println("Added perma");
                 boards[0].addPerma();
                 if(!singlePlayer)
                     boards[1].addPerma();
             }
             
+            // Process the action for this step
             boards[0].doStep();
             if(!singlePlayer)
                 boards[1].doStep();
@@ -151,7 +154,7 @@ public class Game {
                 }
             }
             
-            // Someone has lost, reset game.
+            // Someone has lost, set the results for GA to process later
             if(!boards[0].isAlive() || !boards[1].isAlive()){
                 gameEnded = true;
                 results[0] = boards[0].getResults();
@@ -165,6 +168,7 @@ public class Game {
 		return boards[id];
 	}
         
+        // Change the seed given to the piece randomizer
         public void updateSeed(){
             seed = (new Random()).nextInt();
         }

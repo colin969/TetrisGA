@@ -61,7 +61,6 @@ public class Population {
             return;
         }
         
-        generation++;
         ArrayList<Individual> offspring = tournamentSelection(pop);
         offspring = crossover(offspring);
         evalPop = mutate(offspring);
@@ -140,6 +139,7 @@ public class Population {
         } else {
             isEvaluating = false;
             pop = evalPop;
+            generation++;
         }
     }
     
