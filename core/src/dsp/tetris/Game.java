@@ -45,57 +45,57 @@ public class Game {
             // I Block
             tetrominoes[0] = new Tetromino(Color.CYAN, new Point[][]{
                 {new Point(0,2), new Point(1,2), new Point(2,2), new Point(3,2)},
-                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(1,3)},
-                {new Point(0,2), new Point(1,2), new Point(2,2), new Point(3,2)},
+                {new Point(2,0), new Point(2,1), new Point(1,2), new Point(2,3)},
+                {new Point(0,1), new Point(1,1), new Point(2,1), new Point(3,1)},
                 {new Point(1,0), new Point(1,1), new Point(1,2), new Point(1,3)} 
             });
             
             // J Block
             tetrominoes[1] = new Tetromino(Color.BLUE, new Point[][]{
+                {new Point(0,1), new Point(1,1), new Point(2,1), new Point(0,2)},
+                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(2,2)},
                 {new Point(0,1), new Point(1,1), new Point(2,1), new Point(2,0)},
-                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(0,0)},
-                {new Point(0,0), new Point(1,0), new Point(2,0), new Point(0,1)},
-                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(2,2)}
+                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(0,0)}
             });
             
             // L Block
             tetrominoes[2] = new Tetromino(Color.ORANGE, new Point[][]{
-                {new Point(0,1), new Point(1,1), new Point(2,1), new Point(0,0)},
-                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(0,2)},
-                {new Point(0,0), new Point(1,0), new Point(2,0), new Point(2,1)},
-                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(2,0)}
+                {new Point(0,1), new Point(1,1), new Point(2,1), new Point(2,2)},
+                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(2,0)},
+                {new Point(0,0), new Point(0,1), new Point(1,1), new Point(2,1)},
+                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(0,2)}
             });
             
             // O Block
             tetrominoes[3] = new Tetromino(Color.YELLOW, new Point[][]{
-                {new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,0)},
-                {new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,0)},
-                {new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,0)},
-                {new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,0)}
+                {new Point(1,1), new Point(2,1), new Point(1,2), new Point(2,2)},
+                {new Point(1,1), new Point(2,1), new Point(1,2), new Point(2,2)},
+                {new Point(1,1), new Point(2,1), new Point(1,2), new Point(2,2)},
+                {new Point(1,1), new Point(2,1), new Point(1,2), new Point(2,2)}
             });
             
             // S Block
             tetrominoes[4] = new Tetromino(Color.GREEN, new Point[][]{
-                {new Point(0,0), new Point(1,0), new Point(1,1), new Point(2,1)},
-                {new Point(0,2), new Point(0,1), new Point(1,1), new Point(1,0)},
+                {new Point(0,1), new Point(1,1), new Point(1,2), new Point(2,2)},
+                {new Point(1,2), new Point(1,1), new Point(2,1), new Point(2,0)},
                 {new Point(0,0), new Point(1,0), new Point(1,1), new Point(2,1)},
                 {new Point(0,2), new Point(0,1), new Point(1,1), new Point(1,0)}
             });
             
             // T Block
             tetrominoes[5] = new Tetromino(Color.PURPLE, new Point[][]{
+                {new Point(0,1), new Point(1,1), new Point(2,1), new Point(1,2)},
+                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(2,1)},
                 {new Point(0,1), new Point(1,1), new Point(2,1), new Point(1,0)},
-                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(0,1)},
-                {new Point(0,0), new Point(1,0), new Point(2,0), new Point(1,1)},
-                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(2,1)}
+                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(0,1)}
             });
             
             // Z Block
             tetrominoes[6] = new Tetromino(Color.RED, new Point[][]{
-                {new Point(0,1), new Point(1,1), new Point(1,0), new Point(2,0)},
+                {new Point(0,2), new Point(1,2), new Point(1,1), new Point(2,1)},
                 {new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,2)},
                 {new Point(0,1), new Point(1,1), new Point(1,0), new Point(2,0)},
-                {new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,2)}
+                {new Point(0,0), new Point(0,1), new Point(1,1), new Point(1,2)}
             });
             
 	}
@@ -122,7 +122,7 @@ public class Game {
             batch.begin();
             font.draw(batch, String.format("Piece\n%s", step), 220, 480);
             font.draw(batch, String.format("Score\n%s", boards[0].getScore()) , 220, 440);
-            font.draw(batch, String.format("Lines\n%s", boards[0].linesClear), 270, 480);
+            font.draw(batch, String.format("Lines\n%s", boards[0].getLinesCleared()), 270, 480);
             batch.end();
             
         }
@@ -139,18 +139,16 @@ public class Game {
             boards[0].doStep();
             if(!singlePlayer)
                 boards[1].doStep();
-            else
-                boards[1].step++;
             
             // Move any garbage created to other board
             if(garbage){
-                if(boards[0].garbageLevel > 0){
-                    boards[1].queueGarbage(boards[0].garbageLevel);
-                    boards[0].garbageLevel = 0;
+                if(boards[0].getGarbageLevel() > 0){
+                    boards[1].queueGarbage(boards[0].getGarbageLevel());
+                    boards[0].setGarbageLevel(0);
                 }
-                if(boards[1].garbageLevel > 0){
-                    boards[0].queueGarbage(boards[1].garbageLevel);
-                    boards[1].garbageLevel = 0;
+                if(boards[1].getGarbageLevel() > 0){
+                    boards[0].queueGarbage(boards[1].getGarbageLevel());
+                    boards[1].setGarbageLevel(0);
                 }
             }
             

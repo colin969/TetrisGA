@@ -14,8 +14,8 @@ import java.util.Random;
 public class GA {
     private int weights = 8;
     
-    Population pop;
-    Individual workingInd;
+    private Population pop;
+    private Individual workingInd;
     
     public void init(){
         pop = new Population(10, weights, 0.95F, 0.08F);
@@ -49,11 +49,11 @@ public class GA {
         return pop.generation;
     }
     
-    public int getGenNum(){
+    public int getIndNum(){
         return pop.evalStep + 1;
     }
     
-    public int getGenNumMax(){
+    public int getIndNumMax(){
         return pop.popSize;
     }
 

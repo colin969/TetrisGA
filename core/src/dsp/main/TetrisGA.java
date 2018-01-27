@@ -15,14 +15,14 @@ import dsp.tetris.Game;
 import dsp.tetris.Player;
 
 public class TetrisGA extends ApplicationAdapter implements InputProcessor {
-	SpriteBatch batch;
-        BitmapFont font;
-	Texture img;
-        private static Game game;
-        private static ShapeRenderer shapeRenderer;
-        private static float gameUpdateRate = 0.2F;
-        private static float timePassed;
-        private static float[] test;
+	private SpriteBatch batch;
+        private BitmapFont font;
+	private Texture img;
+        private Game game;
+        private ShapeRenderer shapeRenderer;
+        private float gameUpdateRate = 0.2F;
+        private float timePassed;
+        private float[] testCase;
         private int lastGen;
         private boolean fullRender;
         private float savedUpdateRate;
@@ -39,10 +39,10 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 game.init();
                 timePassed = 0;
                 //test = ga.getRandom();
-                test = new float[]{-0.8744863F, 0.025707256F, 0.2459504F, -0.14321329F, -0.67774916F, -0.33289695F, -0.77588874F, -0.49761575F};
+                testCase = new float[]{-0.8744863F, 0.025707256F, 0.2459504F, -0.14321329F, -0.67774916F, -0.33289695F, -0.77588874F, -0.49761575F};
                 lastGen = 1;
                 
-                game.resetGame(ga.startGame(), test);
+                game.resetGame(ga.startGame(), testCase);
                 
                 shapeRenderer = new ShapeRenderer();
                 shapeRenderer.setAutoShapeType(true);
@@ -67,12 +67,12 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                     if(game.gameEnded){
                         ga.returnResults(game.results);
                         if(ga.getGen() != lastGen){
-                            test = ga.getBest();
+                            testCase = ga.getBest();
                             lastGen = ga.getGen();
                             ga.printGen();
                             game.updateSeed();
                         }
-                        game.resetGame(ga.startGame(), test);
+                        game.resetGame(ga.startGame(), testCase);
                     }
                     
                     // Do game step
@@ -89,7 +89,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 // Print running Generation and progress through population
                 batch.begin();
                 font.draw(batch, String.format("Generation\n%s", ga.getGen()), 220, 100);
-                font.draw(batch, String.format("Individual\n%s of %s", ga.getGenNum(), ga.getGenNumMax()), 220, 60);
+                font.draw(batch, String.format("Individual\n%s of %s", ga.getIndNum(), ga.getIndNumMax()), 220, 60);
                 if(paused)
                     font.draw(batch, "P A U S E D", 220, 200);
                 batch.end();
