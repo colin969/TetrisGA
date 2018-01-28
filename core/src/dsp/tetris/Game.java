@@ -130,8 +130,8 @@ public class Game {
             gameEnded = false;
             step = 1;
             
-            boards[0] = new Board(new Player(true, playerOne, false), seed, 10, 10);
-            boards[1] = new Board(new Player(true, playerTwo, false), seed, 310, 10);
+            boards[0] = new Board(new Player(1, playerOne, false), seed, 10, 10);
+            boards[1] = new Board(new Player(1, playerTwo, false), seed, 310, 10);
 	}
         
         public void drawGame(ShapeRenderer renderer, BitmapFont font, SpriteBatch batch, boolean renderBoard){

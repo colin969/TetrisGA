@@ -67,13 +67,20 @@ project(":html") {
 
 project(":core") {
     apply plugin: "java"
-
+    
+    sourceSets.test.java.srcDirs = ["/test"]
 
     dependencies {
+        testCompile "junit:junit:+"
+        testCompile "com.badlogicgames.gdx:gdx:$gdxVersion"
+        testCompile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+    
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
         
     }
+    
+    
 }
 
 tasks.eclipse.doLast {

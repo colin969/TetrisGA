@@ -27,6 +27,7 @@ public class Board {
     private static int boardWidth = 200;
     private static int boardHeight = 440;
     private static int blockSize = 20;
+    private static int miniBlockSize = 8;
     private static int boardHeightCells = 40;
 
     private int xAnchor;
@@ -97,7 +98,7 @@ public class Board {
             this.softDrop();
         }
 
-        if(player.getCpu() && isAlive){
+        if(player.getType() != 0 && isAlive){
             if(holdPiece == null){
                 this.hold();
                 return;
@@ -364,6 +365,7 @@ public class Board {
     }
 
     private void scoreAction(Action action, Point[] piece, Point origin, int[] colHeights){
+        
         action.origin = origin;
 
         // Get number of line clears
@@ -400,6 +402,38 @@ public class Board {
         action.bumpiness = bumpiness;
     }
     
+    private void getActionsForDropPoint(ArrayList<Action> validActions, int y, Tetromino piece, int col, boolean swap, int rot, Point[][] rotMatrix, int[] colHeights){
+        Action slideAction = new Action();
+        slideAction.swap = swap;
+        slideAction.rot = rot;
+        scoreAction(slideAction, piece.point[rot], new Point(col, y), colHeights);
+        validActions.add(slideAction);
+
+        Object[] vals = getRotationTranslation(piece, rot, false, new Point(col, y), rotMatrix);
+        if((Integer) vals[0] >= 0){
+            Action rotAction = new Action();
+            int newRot = (Integer) vals[0];
+            Point newOrigin = (Point) vals[1];
+
+            rotAction.rot = newRot;
+            rotAction.swap = swap;
+            scoreAction(rotAction, piece.point[newRot], newOrigin, colHeights);
+            validActions.add(rotAction);
+        }
+        // RIGHT
+        vals = getRotationTranslation(piece, rot, true, new Point(col, y), rotMatrix);
+        if((Integer) vals[0] >= 0){
+            Action rotAction = new Action();
+            int newRot = (Integer) vals[0];
+            Point newOrigin = (Point) vals[1];
+
+            rotAction.rot = newRot;
+            rotAction.swap = swap;
+            scoreAction(rotAction, piece.point[newRot], newOrigin, colHeights);
+            validActions.add(rotAction);
+        }
+    }
+    
     private ArrayList<Action> getActionsForPiece(Tetromino piece, boolean swap){
         // Get height of all columns on the board
         int[] colHeights = new int[10];
@@ -418,13 +452,15 @@ public class Board {
 
         for(int col = -2; col < 9; col++){
             for(int rot = 0; rot < 4; rot++){
-                Action action = new Action();
-                action.rot = rot;
                 // Make sure action is in bounds before finding lowest point to use
                 if(!collides(piece.point[rot], new Point(col, 20))){
-                    int y = getLowestValid(piece.point[rot], new Point(col, 20));
+                    // Initial drop point
+                    int workingY;
+                    int dropY = getLowestValid(piece.point[rot], new Point(col, 20));
+                    Action action = new Action();
+                    action.rot = rot;
                     action.swap = swap;
-                    scoreAction(action, piece.point[rot], new Point(col, y), colHeights);
+                    scoreAction(action, piece.point[rot], new Point(col, dropY), colHeights);
                     validActions.add(action);
                     
                     Point[][] rotMatrix;
@@ -434,30 +470,26 @@ public class Board {
                     else
                         rotMatrix = Game.rotMatrixRest;
                     
-                    // Check left and right rotations from this position
-                    // LEFT
-                    Object[] vals = getRotationTranslation(piece, rot, false, new Point(col, y), Game.rotMatrixRest);
-                    if((Integer) vals[0] >= 0){
-                        Action rotAction = new Action();
-                        int newRot = (Integer) vals[0];
-                        Point newOrigin = (Point) vals[1];
-
-                        rotAction.rot = newRot;
-                        rotAction.swap = swap;
-                        scoreAction(rotAction, piece.point[newRot], newOrigin, colHeights);
-                        validActions.add(rotAction);
+                    // Slide left
+                    workingY = dropY;
+                    for(int slide = col-1; slide >= -2; slide--){
+                        // If slide now collides, not possible to slide anymore
+                        if(collides(piece.point[rot], new Point(slide, workingY)))
+                            break;
+                        
+                        workingY = getLowestValid(piece.point[rot], new Point(slide, workingY));
+                        getActionsForDropPoint(validActions, workingY, piece, slide, swap, rot, rotMatrix, colHeights);
                     }
-                    // RIGHT
-                    vals = getRotationTranslation(piece, rot, true, new Point(col, y), Game.rotMatrixRest);
-                    if((Integer) vals[0] >= 0){
-                        Action rotAction = new Action();
-                        int newRot = (Integer) vals[0];
-                        Point newOrigin = (Point) vals[1];
-
-                        rotAction.rot = newRot;
-                        rotAction.swap = swap;
-                        scoreAction(rotAction, piece.point[newRot], newOrigin, colHeights);
-                        validActions.add(rotAction);
+                    
+                    // Slide right
+                    workingY = dropY;
+                    for(int slide = col+1; slide < 9; slide++){
+                        // If slide now collides, not possible to slide anymore
+                        if(collides(piece.point[rot], new Point(slide, workingY)))
+                            break;
+                        
+                        workingY = getLowestValid(piece.point[rot], new Point(slide, workingY));
+                        getActionsForDropPoint(validActions, workingY, piece, slide, swap, rot, rotMatrix, colHeights);
                     }
                 }
             }
@@ -519,6 +551,16 @@ public class Board {
                         blockSize);
             }
             offset.y -= 20 * 5;
+        }
+        
+        // Draw Hold Piece
+        offset = new Point(xAnchor + boardWidth + 60, yAnchor + boardHeight - 40);
+        renderer.setColor(holdPiece.color);
+        for(Point p : holdPiece.point[0]){
+            renderer.rect(offset.x + (p.x * miniBlockSize),
+                    offset.y + (p.y * miniBlockSize),
+                    miniBlockSize,
+                    miniBlockSize);
         }
 
         // Draw Board Edges
@@ -603,6 +645,10 @@ public class Board {
     
     public int getLinesCleared(){
         return linesClear;
+    }
+    
+    public void setActivePiece(Tetromino piece){
+        this.activePiece = piece;
     }
 
 }
