@@ -90,7 +90,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 batch.begin();
                 font.draw(batch, String.format("Generation\n%s", ga.getGen()), 220, 100);
                 font.draw(batch, String.format("Individual\n%s of %s", ga.getIndNum(), ga.getIndNumMax()), 220, 60);
-                font.draw(batch, String.format("Step Rate\n%s", gameUpdateRate), 520, 60);
+                font.draw(batch, String.format("Step Rate\n%s", 1/gameUpdateRate), 520, 60);
                 if(paused)
                     font.draw(batch, "P A U S E D", 220, 200);
                 batch.end();

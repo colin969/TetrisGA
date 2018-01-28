@@ -155,9 +155,9 @@ public class Game {
         public void doStep(){
             // Add permanent garbage every specified number of steps
             if(step % stepsPerPermagarbage == 0){
-                boards[0].addPerma();
+                boards[0].addSolidLine();
                 if(!singlePlayer)
-                    boards[1].addPerma();
+                    boards[1].addSolidLine();
             }
             
             // Process the action for this step

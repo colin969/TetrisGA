@@ -35,8 +35,8 @@ public class Board {
 
     private Color[][] board;
     private Color background = Color.LIGHT_GRAY;
-    private Color permaGarbage = Color.DARK_GRAY;
-    private int permaGarbageRows;
+    private Color solidGarbage = Color.DARK_GRAY;
+    private int solidGarbageRows;
     private boolean isAlive;
     private int queuedGarbage;
     private int garbageHole;
@@ -60,7 +60,7 @@ public class Board {
     public Board(Player player, int seed, int xAnchor, int yAnchor) {
         step = 1;
         linesClear = 0;
-        permaGarbageRows = 0;
+        solidGarbageRows = 0;
 
         board =  new Color[10][boardHeightCells];
         results = 1;
@@ -207,16 +207,16 @@ public class Board {
             while(queuedGarbage > 0){
                 // Move up a line for each line of garbage
                 // 9/10 chance to change garbage hole
-                for(int oldRow = 23; oldRow >= permaGarbageRows+1; oldRow--){
+                for(int oldRow = 23; oldRow >= solidGarbageRows+1; oldRow--){
                     for(int col = 0; col < 10; col++){
                         board[col][oldRow] = board[col][oldRow-1];
                     }
                 }
                 for(int col = 0; col < 10; col++){
                     if(col != garbageHole)
-                        board[col][permaGarbageRows] = Color.GRAY;
+                        board[col][solidGarbageRows] = Color.GRAY;
                     else
-                        board[col][permaGarbageRows] = background;
+                        board[col][solidGarbageRows] = background;
                 }
                 queuedGarbage--;
             }
@@ -233,7 +233,7 @@ public class Board {
             if(row >= 0){
                 clear = true;
                 for(int col = 0; col < 10; col++){
-                    if(board[col][row] == background || board[col][row] == permaGarbage){
+                    if(board[col][row] == background || board[col][row] == solidGarbage){
                         clear = false;
                         break;
                     }
@@ -574,7 +574,7 @@ public class Board {
         }
     }
     
-    public void addPerma(){
+    public void addSolidLine(){
         // Move up a line for each line of garbage
 
         for(int oldRow = 23; oldRow >= 1; oldRow--){
@@ -583,10 +583,10 @@ public class Board {
             }
         }
         for(int col = 0; col < 10; col++){
-            board[col][0] = permaGarbage;
+            board[col][0] = solidGarbage;
         }
         
-        permaGarbageRows++;
+        solidGarbageRows++;
     }
 
     public Player getPlayer() {
