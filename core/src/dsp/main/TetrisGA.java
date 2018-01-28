@@ -17,7 +17,6 @@ import dsp.tetris.Player;
 public class TetrisGA extends ApplicationAdapter implements InputProcessor {
 	private SpriteBatch batch;
         private BitmapFont font;
-	private Texture img;
         private Game game;
         private ShapeRenderer shapeRenderer;
         private float gameUpdateRate = 2F;
@@ -117,7 +116,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
             // Disable board rendering, puts to full speed - TODO : Tweaks to show rest of UI
             if(keycode == Keys.R){
                 fullRender = !fullRender;
-                if(fullRender){
+                if(!fullRender){
                     savedUpdateRate = gameUpdateRate;
                     gameUpdateRate = 0;
                 } else {
