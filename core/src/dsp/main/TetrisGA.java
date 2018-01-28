@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import dsp.ga.GA;
+import dsp.tetris.Board;
 import dsp.tetris.Game;
 import dsp.tetris.Player;
 
@@ -19,15 +20,19 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
         private BitmapFont font;
         private Game game;
         private ShapeRenderer shapeRenderer;
-        private float gameUpdateRate = 2F;
+        private float gameUpdateRate = 1F;
         private float timePassed;
-        private float[] testCase;
+        private long lastPress;
+        private boolean stillPressed;
+        private long repeatTime = (long) (0.2 * 1000.0);
+        private Player testCase;
         private int lastGen;
         private boolean fullRender;
         private float savedUpdateRate;
         private boolean paused;
         
         private GA ga;
+        private boolean gen = true;
 	
 	@Override
 	public void create () {
@@ -37,11 +42,15 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 game = new Game();
                 game.init();
                 timePassed = 0;
-                //test = ga.getRandom();
-                testCase = new float[]{-0.8744863F, 0.025707256F, 0.2459504F, -0.14321329F, -0.67774916F, -0.33289695F, -0.77588874F, -0.49761575F};
-                lastGen = 1;
+                lastPress = 0;
+                stillPressed = false;
                 
-                game.resetGame(ga.startGame(), testCase);
+                testCase = new Player(true, new float[]{-0.8744863F, 0.025707256F, 0.2459504F, -0.14321329F, -0.67774916F, -0.33289695F, -0.77588874F, -0.49761575F}, false, 1);
+                lastGen = 1;
+                if(gen)
+                    game.resetGame(new Player(true, ga.startGame(), false, 0), testCase);
+                else
+                    game.resetGame(new Player(false, false, 0), testCase);
                 
                 shapeRenderer = new ShapeRenderer();
                 shapeRenderer.setAutoShapeType(true);
@@ -61,18 +70,27 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
 	public void render () {
                 timePassed += Gdx.graphics.getDeltaTime();
                 
+                if(stillPressed && !gen && (lastPress + repeatTime) < System.currentTimeMillis() && !paused){
+                    lastPress = System.currentTimeMillis();
+                    checkInputs();
+                }
+                
                 if(!paused){
                     // Game ended, process results, start next game
                     if(game.gameEnded){
-                        ga.returnResults(game.results);
-                        // Check for change in generation
-                        if(ga.getGen() != lastGen){
-                            testCase = ga.getBest();
-                            lastGen = ga.getGen();
-                            ga.printGen();
-                            game.updateSeed();
+                        if(gen){
+                            ga.returnResults(game.results);
+                            // Check for change in generation
+                            if(ga.getGen() != lastGen){
+                                testCase = new Player(true, ga.getBest(), false, 1);
+                                lastGen = ga.getGen();
+                                ga.printGen();
+                                game.updateSeed();
+                            }
+                            game.resetGame(new Player(true, ga.startGame(), false, 0), testCase);
+                        } else {
+                            game.resetGame(new Player(false, false, 0), testCase);
                         }
-                        game.resetGame(ga.startGame(), testCase);
                     }
                     
                     // Do game step
@@ -88,8 +106,10 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
 
                 // Print running Generation and progress through population
                 batch.begin();
-                font.draw(batch, String.format("Generation\n%s", ga.getGen()), 220, 100);
-                font.draw(batch, String.format("Individual\n%s of %s", ga.getIndNum(), ga.getIndNumMax()), 220, 60);
+                if(gen){
+                    font.draw(batch, String.format("Generation\n%s", ga.getGen()), 220, 100);
+                    font.draw(batch, String.format("Individual\n%s of %s", ga.getIndNum(), ga.getIndNumMax()), 220, 60);
+                }
                 font.draw(batch, String.format("Step Rate\n%s", 1/gameUpdateRate), 520, 60);
                 if(paused)
                     font.draw(batch, "P A U S E D", 220, 200);
@@ -104,6 +124,25 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
 		batch.dispose();
                 font.dispose();
 	}
+        
+        private void checkInputs(){
+            Board board = game.getPlayerBoard(0);
+            if(board != null){
+                board.checkPieceExists();
+                board.playerActed = true;
+                
+                if (Gdx.input.isKeyPressed(Keys.DOWN))
+                    board.softDrop();
+                else if (Gdx.input.isKeyPressed(Keys.LEFT))
+                    board.slide(false);
+                else if (Gdx.input.isKeyPressed(Keys.RIGHT))
+                    board.slide(true);
+                else{
+                    board.playerActed = false;
+                    stillPressed = false;
+                }
+            }
+        }
         
         @Override
         public boolean keyDown(int keycode) {
@@ -153,6 +192,40 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 gameUpdateRate -= step;
                 if(gameUpdateRate < 0){
                     gameUpdateRate = 0;
+                }
+            }
+            
+            if(keycode == Keys.ENTER){
+                gen = !gen;
+                game.gameEnded = true;
+            }
+            
+            if(!gen && !paused){
+                Board board = game.getPlayerBoard(0);
+                if(board != null){
+                    if(board.isAlive()){
+                        board.checkPieceExists();
+                        board.playerActed = true;
+                        stillPressed = true;
+                        lastPress = System.currentTimeMillis();
+
+                        if(keycode == Keys.UP)
+                            board.hardDrop();
+                        else if (keycode == Keys.DOWN)
+                            board.softDrop();
+                        else if (keycode == Keys.LEFT)
+                            board.slide(false);
+                        else if (keycode == Keys.RIGHT)
+                            board.slide(true);
+                        else if (keycode == Keys.X)
+                            board.rotate(true);
+                        else if (keycode == Keys.Z)
+                            board.rotate(false);
+                        else if (keycode == Keys.C)
+                            board.hold();
+                        else
+                            board.playerActed = false;
+                    }
                 }
             }
             

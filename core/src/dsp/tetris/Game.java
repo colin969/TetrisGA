@@ -125,13 +125,13 @@ public class Game {
             
 	}
 
-	public void resetGame(float[] playerOne, float[] playerTwo) {
+	public void resetGame(Player playerOne, Player playerTwo) {
             boards = new Board[2];
             gameEnded = false;
             step = 1;
             
-            boards[0] = new Board(new Player(1, playerOne, false), seed, 10, 10);
-            boards[1] = new Board(new Player(1, playerTwo, false), seed, 310, 10);
+            boards[0] = new Board(playerOne, seed, 10, 10);
+            boards[1] = new Board(playerTwo, seed, 310, 10);
 	}
         
         public void drawGame(ShapeRenderer renderer, BitmapFont font, SpriteBatch batch, boolean renderBoard){
@@ -190,6 +190,15 @@ public class Game {
 	public Board getBoard(int id) {
 		return boards[id];
 	}
+        
+        public Board getPlayerBoard(int player){
+            for(Board b : boards){
+                if(b.getPlayer().getId() == player)
+                    return b;
+            }
+            
+            return null;
+        }
         
         // Change the seed given to the piece randomizer
         public void updateSeed(){

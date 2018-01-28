@@ -15,22 +15,23 @@ import java.util.Random;
 public class Player {
 
         public Player(){
-            this(2, false);
+            this(false, false, 0);
         }
         
-        public Player(int type, boolean debug){
-            this.genome = null;
-            this.type = type;
-            this.debug = debug;
+        public Player(boolean cpu, boolean debug, int id){
+            this(cpu, null, debug, id);
         }
         
-        public Player(int type, float[] genome, boolean debug){
+        public Player(boolean cpu, float[] genome, boolean debug, int id){
+            this.id = id;
             this.genome = genome;
-            this.type = type;
+            this.cpu = cpu;
             this.debug = debug;
         }
+        
+        private int id;
     
-	private int type;
+	private boolean cpu;
         
         private boolean debug;
 
@@ -40,9 +41,6 @@ public class Player {
         
         // Choose move based on weights
         public Action nextMove(ArrayList<Action> actions){
-            
-            if(type == 2)
-                return nextTestAction;
             
             Action bestAction = null;
             float bestScore = 0;
@@ -75,8 +73,12 @@ public class Player {
             return bestAction;
         }
         
-        public int getType(){
-            return this.type;
+        public boolean getCpu(){
+            return this.cpu;
+        }
+        
+        public int getId(){
+            return this.id;
         }
         
         public void debug(){

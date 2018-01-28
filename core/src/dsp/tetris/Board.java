@@ -54,6 +54,7 @@ public class Board {
     private int linesClear;
     private int step;
 
+    public boolean playerActed;
     private int score;
 
     private Player player;
@@ -62,6 +63,7 @@ public class Board {
         step = 1;
         linesClear = 0;
         solidGarbageRows = 0;
+        playerActed = false;
 
         board =  new Color[10][boardHeightCells];
         results = 1;
@@ -94,11 +96,13 @@ public class Board {
         step++;
         if(activePiece == null){
             addPiece();
-        } else {
-            this.softDrop();
+        } else if(!playerActed){
+            softDrop();
         }
+        
+        playerActed = false;
 
-        if(player.getType() != 0 && isAlive){
+        if(player.getCpu() && isAlive){
             if(holdPiece == null){
                 this.hold();
                 return;
@@ -134,9 +138,31 @@ public class Board {
         }
 
     }
+    
+    public void slide(boolean right){
+        Point newOrigin = new Point(pieceOrigin.x, pieceOrigin.y);
+        newOrigin.x += right ? 1 : -1;
+        
+        if(!collides(newOrigin, pieceRot)){
+            pieceOrigin = newOrigin;
+        }
+    }
 
-    public void rotate() {
-
+    public void rotate(boolean right) {
+        Point[][] kickMatrix;
+        
+        if(activePiece.letter == "I")
+            kickMatrix = Game.rotMatrixI;
+        else
+            kickMatrix = Game.rotMatrixRest;
+        
+        Object[] vals = getRotationTranslation(activePiece, pieceRot, right, pieceOrigin, kickMatrix);
+        if((Integer) vals[0] >= 0){
+            int newRot = (Integer) vals[0];
+            Point trans = (Point) vals[1];
+            pieceOrigin = trans;
+            pieceRot = newRot;
+        }
     }
     
     // Returns new rotation and new lowest origin
@@ -158,10 +184,6 @@ public class Board {
             Point trans = kickMatrix[rotIndex][test];
             Point newOrigin = new Point(origin.x + trans.x, origin.y + trans.y);
             if(!collides(piece.point[newRot], newOrigin)){
-                // Find any drop from here
-                int y = this.getLowestValid(piece.point[newRot], newOrigin);
-                newOrigin.y = y;
-                
                 return new Object[]{newRot, newOrigin};
             }
         }
@@ -169,11 +191,19 @@ public class Board {
         return new Object[]{-1};
     }
 
+    public void sonicDrop() {
+        int y = getLowestValid(activePiece.point[pieceRot], pieceOrigin);
+        pieceOrigin.y = y;
+    }
+    
     public void hardDrop() {
-
+        int y = getLowestValid(activePiece.point[pieceRot], pieceOrigin);
+        pieceOrigin.y = y;
+        lockPiece();
     }
 
     public void softDrop() {
+        // Lock piece if can't fall any more
         if(!collides(new Point(pieceOrigin.x, pieceOrigin.y - 1), pieceRot)){
             pieceOrigin.y = pieceOrigin.y - 1;
         } else {
@@ -225,6 +255,7 @@ public class Board {
         }
 
         activePiece = null;
+        addPiece();
     }
 
     private int clearLines(){
@@ -414,6 +445,7 @@ public class Board {
             Action rotAction = new Action();
             int newRot = (Integer) vals[0];
             Point newOrigin = (Point) vals[1];
+            newOrigin.y = getLowestValid(piece.point[newRot], newOrigin);
 
             rotAction.rot = newRot;
             rotAction.swap = swap;
@@ -426,6 +458,7 @@ public class Board {
             Action rotAction = new Action();
             int newRot = (Integer) vals[0];
             Point newOrigin = (Point) vals[1];
+            newOrigin.y = getLowestValid(piece.point[newRot], newOrigin);
 
             rotAction.rot = newRot;
             rotAction.swap = swap;
@@ -605,7 +638,7 @@ public class Board {
         return results;
     }
 
-    private void hold() {
+    public void hold() {
         if(holdPiece == null){
             holdPiece = activePiece;
             addPiece();
@@ -613,6 +646,7 @@ public class Board {
             Tetromino swapPiece = activePiece;
             activePiece = holdPiece;
             holdPiece = swapPiece;
+            pieceOrigin = new Point(3, 20);
         }
     }
     
@@ -649,6 +683,11 @@ public class Board {
     
     public void setActivePiece(Tetromino piece){
         this.activePiece = piece;
+    }
+
+    public void checkPieceExists() {
+        if(activePiece == null)
+            addPiece();
     }
 
 }
