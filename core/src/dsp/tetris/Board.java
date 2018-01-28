@@ -547,6 +547,7 @@ public class Board {
     // Draw board
     public void draw(ShapeRenderer renderer){
 
+        int borderThickness = 1;
         // Draw Current Pieces
         renderer.set(ShapeType.Filled);
         for(int x = 0; x < board.length; x++){
@@ -558,8 +559,7 @@ public class Board {
                         blockSize);
             }
         }
-
-
+        
         // Draw Active Piece
         if(activePiece != null){
             renderer.setColor(activePiece.color);
@@ -595,9 +595,32 @@ public class Board {
                     miniBlockSize,
                     miniBlockSize);
         }
-
-        // Draw Board Edges
+        
+        // Draw piece borders
         renderer.set(ShapeType.Line);
+        renderer.setColor(Color.BLACK);
+        for(int x = 0; x < board.length; x++){
+            for(int y = 0; y < board[x].length; y++){
+                if(board[x][y] != background){
+                    renderer.rect(xAnchor + (x * 20),
+                            yAnchor + (y * 20),
+                            blockSize,
+                            blockSize);
+                }
+            }
+        }
+        
+        // Draw active piece borders
+        if(activePiece != null){
+            for(Point p : activePiece.point[pieceRot]){
+                renderer.rect(xAnchor + ((pieceOrigin.x + p.x) * 20),
+                        yAnchor + ((pieceOrigin.y + p.y) * 20),
+                        blockSize,
+                        blockSize);
+            }
+        }
+        
+        // Draw Board Edges
         renderer.setColor(Color.BLACK);
         renderer.rect(xAnchor, yAnchor, boardWidth, boardHeight);
     }
