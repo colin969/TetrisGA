@@ -27,6 +27,7 @@ public class Board {
     private static int boardWidth = 200;
     private static int boardHeight = 440;
     private static int blockSize = 20;
+    private static int boardHeightCells = 40;
 
     private int xAnchor;
     private int yAnchor;
@@ -61,10 +62,10 @@ public class Board {
         linesClear = 0;
         permaGarbageRows = 0;
 
-        board =  new Color[10][24];
+        board =  new Color[10][boardHeightCells];
         results = 1;
         for (int x = 0; x < 10; x++) {
-            for (int y = 0; y < 24; y++) {
+            for (int y = 0; y < boardHeightCells; y++) {
                 board[x][y] = background;
             }
         }
@@ -126,7 +127,7 @@ public class Board {
         pieceRot = 0;
 
         // Failure!
-        if(collides(3,20,pieceRot)){
+        if(collides(new Point(3,20), pieceRot)){
             this.isAlive = false;
             this.results = 1;
         }
@@ -136,13 +137,43 @@ public class Board {
     public void rotate() {
 
     }
+    
+    // Returns new rotation and new lowest origin
+    public Object[] getRotationTranslation(Tetromino piece, int rot, boolean right, Point origin, Point[][] kickMatrix){
+        int rotIndex = (rot * 2) + (right ? 0 : -1);
+        int newRot = rot + (right ? 1 : -1);
+        
+        // Spawn rot left is only one out of bounds
+        if(rotIndex == -1)
+            rotIndex = 7;
+
+        // Move new rotation in bounds
+        if(newRot < 0)
+            newRot = 3;
+        else if(newRot > 3)
+            newRot = 0;        
+        
+        for(int test = 0; test < 5; test++){
+            Point trans = kickMatrix[rotIndex][test];
+            Point newOrigin = new Point(origin.x + trans.x, origin.y + trans.y);
+            if(!collides(piece.point[newRot], newOrigin)){
+                // Find any drop from here
+                int y = this.getLowestValid(piece.point[newRot], newOrigin);
+                newOrigin.y = y;
+                
+                return new Object[]{newRot, newOrigin};
+            }
+        }
+        
+        return new Object[]{-1};
+    }
 
     public void hardDrop() {
 
     }
 
     public void softDrop() {
-        if(!collides(pieceOrigin.x, pieceOrigin.y - 1, pieceRot)){
+        if(!collides(new Point(pieceOrigin.x, pieceOrigin.y - 1), pieceRot)){
             pieceOrigin.y = pieceOrigin.y - 1;
         } else {
             lockPiece();
@@ -210,7 +241,7 @@ public class Board {
                 if(clear){
                     clears++;
                     int nextRow = row;
-                    for(int oldRow = nextRow + 1; oldRow < 24; oldRow++){
+                    for(int oldRow = nextRow + 1; oldRow < boardHeightCells; oldRow++){
                         for(int col = 0; col < 10; col++){
                             board[col][nextRow] = board[col][oldRow];
                         }
@@ -226,19 +257,19 @@ public class Board {
         return clears;
     }
 
-    private int boardCheckClears(int col, int placedY, Point[] piece) {
+    private int boardCheckClears(Point[] piece, Point origin) {
         int clears = 0;
 
         // Only check possible changed rows
         for(int plusY = 0; plusY < 4; plusY++){
-            int y = plusY + placedY;
+            int y = plusY + origin.y;
             boolean clear = true;
             if(y >= 0){
                 for(int x = 0; x < 10; x++){
                     // If space not filled, check if piece fits space (if not, no clear!)
                     if(board[x][y] == background){
                         for(Point p : piece){
-                            if(p.x + col == x && p.y + placedY == y)
+                            if(p.x + origin.x == x && p.y + origin.y == y)
                                 break;
                             clear = false;
                             break;
@@ -255,7 +286,7 @@ public class Board {
         return clears;
     }
 
-    private int boardCheckHoles(Point placement, Point[] piece){
+    private int boardCheckHoles(Point[] piece, Point origin){
         Point[] topPieces = new Point[4];
         int topPieceCount = 0;
 
@@ -281,9 +312,9 @@ public class Board {
 
         for(int num = 0; num < topPieceCount; num++){
             Point p = topPieces[num];
-            int y = placement.y + p.y - 1;
+            int y = origin.y + p.y - 1;
             if(y >= 0){
-                if(board[placement.x + p.x][y] == background){
+                if(board[origin.x + p.x][y] == background){
                     holes++;
                 }
             }
@@ -292,12 +323,15 @@ public class Board {
         return holes;
     }
 
-    private boolean collides(int newX, int newY, int rot){
-        Point[] points = activePiece.point[rot];
-        for(Point p : points){
+    private boolean collides(Point origin, int rot){
+        return collides(activePiece.point[rot], origin);
+    }
+    
+    private boolean collides(Point[] piece, Point origin){
+        for(Point p : piece){
             // Edge check
-            int x = newX + p.x;
-            int y = newY + p.y;
+            int x = origin.x + p.x;
+            int y = origin.y + p.y;
             if(x < 0 || x > 9 || y < 0)
                 return true;
             // Piece check
@@ -308,37 +342,15 @@ public class Board {
         return false;
     }
 
-    // Check if a move is in bounds of the board
-    private boolean getValid(int col, int row, Point[] points){
-        Point origin = new Point(col, row);
-        int x;
-        for(Point p : points){
-            x = origin.x + p.x;
-
-            if(x < 0 || x >= 10){
-                return false;
-            } else if (board[x][origin.y + p.y] != background){
-                return false;
-            }
-        }
-        return true;
-    }
-
     // Get lowest Y origin value for column
-    private int getLowestValid(int col, int row, Point[] points){
-        Point origin = new Point(col, row);
-        int x;
-        int lowest = row;
-        for(int y = row; y >= -2; y--){
-            for(Point p : points){
-                x = origin.x + p.x;
-                if(y + p.y < 0)
-                    return lowest;
-                if(board[x][y + p.y] != background){
-                    return lowest;
-                }
+    private int getLowestValid(Point[] piece, Point origin){
+        int lowest = origin.y;
+        for(int y = lowest; y >= -2; y--){
+            if(!collides(piece, new Point(origin.x, y))){
+                lowest = y;
+            } else {
+                return lowest;
             }
-            lowest = y;
         }
         return lowest;
     }
@@ -351,19 +363,56 @@ public class Board {
         return validActions;
     }
 
-    private ArrayList<Action> getActionsForPiece(Tetromino piece, boolean swap){
-        int[] colHeights = new int[10];
-            int[] colChange;
-            int curHeight;
-            for(int col = 0; col < 10; col++){
-                curHeight = 0;
-                for(int y = 0; y < 24; y++){
-                    if(board[col][y] != background){
-                        curHeight = y+1;
-                    }
-                }
-                colHeights[col] = curHeight;
+    private void scoreAction(Action action, Point[] piece, Point origin, int[] colHeights){
+        action.origin = origin;
+
+        // Get number of line clears
+        action.clears = boardCheckClears(piece, origin);
+
+        // Get number of holes it would produce
+        action.holes = boardCheckHoles(piece, origin);
+
+        int[] colChange = new int[10];
+        for(int i = 0; i < 10; i++)
+            colChange[i] = 0;
+
+        // Calculate any changes to the current heights of the board
+        action.height = 0;
+        for(Point p : piece){
+            int tempY = p.y + origin.y;
+            if(tempY > action.height)
+                action.height = tempY;
+            if(colChange[action.origin.x + p.x] < tempY+1)
+                colChange[action.origin.x + p.x] = tempY+1;
+        }
+
+        int aggregateHeight = 0;
+        int bumpiness = 0;
+        for(int colHeight = 0; colHeight < 10; colHeight++){
+            int firstHeight = colChange[colHeight] == 0 ? colHeights[colHeight] : colChange[colHeight];
+            if(colHeight < 9){
+                int secondHeight = colChange[colHeight+1] == 0 ? colHeights[colHeight+1] : colChange[colHeight+1];
+                bumpiness += Math.abs(firstHeight - secondHeight);
             }
+            aggregateHeight += firstHeight;
+        }
+        action.aggregateHeight = aggregateHeight;
+        action.bumpiness = bumpiness;
+    }
+    
+    private ArrayList<Action> getActionsForPiece(Tetromino piece, boolean swap){
+        // Get height of all columns on the board
+        int[] colHeights = new int[10];
+        int curHeight;
+        for(int col = 0; col < 10; col++){
+            curHeight = 0;
+            for(int y = 0; y < 22; y++){
+                if(board[col][y] != background){
+                    curHeight = y+1;
+                }
+            }
+            colHeights[col] = curHeight;
+        }
 
         ArrayList<Action> validActions = new ArrayList();
 
@@ -372,46 +421,44 @@ public class Board {
                 Action action = new Action();
                 action.rot = rot;
                 // Make sure action is in bounds before finding lowest point to use
-                if(getValid(col, 20, piece.point[rot])){
+                if(!collides(piece.point[rot], new Point(col, 20))){
+                    int y = getLowestValid(piece.point[rot], new Point(col, 20));
                     action.swap = swap;
-
-                    int y = getLowestValid(col, 20, piece.point[rot]);
-                    action.origin = new Point(col, y);
-
-                    // Get number of line clears
-                    action.clears = boardCheckClears(col, y, piece.point[rot]);
-
-                    // Get number of holes it would produce
-                    action.holes = boardCheckHoles(new Point(col, y), piece.point[rot]);
-
-                    colChange = new int[10];
-                    for(int i = 0; i < 10; i++)
-                        colChange[i] = 0;
-
-                    // Get stack height of choice
-                    action.height = 0;
-                    for(Point p : piece.point[rot]){
-                        int tempY = p.y + y;
-                        if(tempY > action.height)
-                            action.height = tempY;
-                        if(colChange[action.origin.x + p.x] < tempY+1)
-                            colChange[action.origin.x + p.x] = tempY+1;
-                    }
-
-                    int aggregateHeight = 0;
-                    int bumpiness = 0;
-                    for(int colHeight = 0; colHeight < 10; colHeight++){
-                        int firstHeight = colChange[colHeight] == 0 ? colHeights[colHeight] : colChange[colHeight];
-                        if(colHeight < 9){
-                            int secondHeight = colChange[colHeight+1] == 0 ? colHeights[colHeight+1] : colChange[colHeight+1];
-                            bumpiness += Math.abs(firstHeight - secondHeight);
-                        }
-                        aggregateHeight += firstHeight;
-                    }
-                    action.aggregateHeight = aggregateHeight;
-                    action.bumpiness = bumpiness;
-
+                    scoreAction(action, piece.point[rot], new Point(col, y), colHeights);
                     validActions.add(action);
+                    
+                    Point[][] rotMatrix;
+                    // Get the right rotation matrix for the piece
+                    if(activePiece.letter.equals("I"))
+                        rotMatrix = Game.rotMatrixI;
+                    else
+                        rotMatrix = Game.rotMatrixRest;
+                    
+                    // Check left and right rotations from this position
+                    // LEFT
+                    Object[] vals = getRotationTranslation(piece, rot, false, new Point(col, y), Game.rotMatrixRest);
+                    if((Integer) vals[0] >= 0){
+                        Action rotAction = new Action();
+                        int newRot = (Integer) vals[0];
+                        Point newOrigin = (Point) vals[1];
+
+                        rotAction.rot = newRot;
+                        rotAction.swap = swap;
+                        scoreAction(rotAction, piece.point[newRot], newOrigin, colHeights);
+                        validActions.add(rotAction);
+                    }
+                    // RIGHT
+                    vals = getRotationTranslation(piece, rot, true, new Point(col, y), Game.rotMatrixRest);
+                    if((Integer) vals[0] >= 0){
+                        Action rotAction = new Action();
+                        int newRot = (Integer) vals[0];
+                        Point newOrigin = (Point) vals[1];
+
+                        rotAction.rot = newRot;
+                        rotAction.swap = swap;
+                        scoreAction(rotAction, piece.point[newRot], newOrigin, colHeights);
+                        validActions.add(rotAction);
+                    }
                 }
             }
         }
@@ -500,7 +547,7 @@ public class Board {
         int curHeight;
         for(int col = 0; col < 10; col++){
             curHeight = 0;
-            for(int y = 0; y < 24; y++){
+            for(int y = 0; y < boardHeightCells; y++){
                 if(board[col][y] != background){
                     curHeight = y+1;
                 }

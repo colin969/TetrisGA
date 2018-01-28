@@ -33,7 +33,7 @@ public class Action {
         
         @Override
         public String toString(){
-            return String.format("Holes %s - Height %s - Aggregate Height %s - Clears %s - Bumpiness %s", holes, height, aggregateHeight, clears, bumpiness);
+            return String.format("Origin - %s - Rotation - %s - Holes %s - Height %s - Aggregate Height %s - Clears %s - Bumpiness %s", origin, rot, holes, height, aggregateHeight, clears, bumpiness);
         }
 
 }

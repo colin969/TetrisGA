@@ -20,7 +20,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
 	private Texture img;
         private Game game;
         private ShapeRenderer shapeRenderer;
-        private float gameUpdateRate = 0.2F;
+        private float gameUpdateRate = 2F;
         private float timePassed;
         private float[] testCase;
         private int lastGen;
@@ -90,6 +90,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 batch.begin();
                 font.draw(batch, String.format("Generation\n%s", ga.getGen()), 220, 100);
                 font.draw(batch, String.format("Individual\n%s of %s", ga.getIndNum(), ga.getIndNumMax()), 220, 60);
+                font.draw(batch, String.format("Step Rate\n%s", gameUpdateRate), 520, 60);
                 if(paused)
                     font.draw(batch, "P A U S E D", 220, 200);
                 batch.end();
@@ -108,7 +109,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
         public boolean keyDown(int keycode) {
             // Adjust step change if shift is held
             float step = 0.05F;
-            if(Gdx.input.isKeyJustPressed(Keys.SHIFT_LEFT)){
+            if(Gdx.input.isKeyPressed(Keys.SHIFT_LEFT)){
                 step = 0.5F;
             }
             

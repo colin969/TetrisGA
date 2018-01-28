@@ -14,10 +14,12 @@ import java.awt.Point;
  */
 public class Tetromino {
     
+    public String letter;
     public Color color;
     public Point[][] point;
     
-    public Tetromino(Color color, Point[][] point){
+    public Tetromino(String letter, Color color, Point[][] point){
+        this.letter = letter;
         this.color = color;
         this.point = point;
     }
