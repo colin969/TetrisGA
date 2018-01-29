@@ -18,18 +18,13 @@ public class Action {
         public int aggregateHeight;
         public int holes;
         public int bumpiness;
-        //public int blockades;
         public Point origin;
         public int rot;
         public boolean swap;
         
-        public Action(int clears, int height, int holes, int blockades, int aggregateHeight){}
+        public Action(int clears, int height, int holes, int aggregateHeight){}
         
         public Action(){}
-    
-	private String type;
-
-	private int score;
         
         @Override
         public String toString(){

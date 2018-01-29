@@ -103,6 +103,14 @@ public class Game {
             }
             step++;
         }
+        
+        public void loadCPU(float[] cpu, int board){
+            
+        }
+        
+        public void saveGameData(){
+            
+        }
 
 	public Board getBoard(int id) {
 		return boards[id];

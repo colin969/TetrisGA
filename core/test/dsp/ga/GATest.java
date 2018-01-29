@@ -69,7 +69,7 @@ public class GATest {
     // TODO
     @Test
     public void printToCSV(){
-        assertTrue(false);
+        fail("TODO");
     }
     
 }
