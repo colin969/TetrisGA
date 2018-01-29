@@ -86,7 +86,10 @@ public class Board {
 
         pieceGen = new Random(seed);
         nextPieces = new LinkedList();
-        List<Tetromino> toAdd = Arrays.asList(Game.tetrominoes);
+        // MUST copy first, otherwise array references will change
+        Tetromino[] temp = new Tetromino[7];
+        System.arraycopy(DataSets.TETROMINOES, 0, temp, 0, temp.length);
+        List<Tetromino> toAdd = Arrays.asList(temp);
         Collections.shuffle(toAdd, pieceGen);
         nextPieces.addAll(toAdd);
         holdPiece = nextPieces.remove();
@@ -123,7 +126,10 @@ public class Board {
     private void addPiece() {
         activePiece = nextPieces.remove();
         if(nextPieces.size() < 3){
-            List<Tetromino> toAdd = Arrays.asList(Game.tetrominoes);
+            // MUST copy first, otherwise array references will change
+            Tetromino[] temp = new Tetromino[7];
+            System.arraycopy(DataSets.TETROMINOES, 0, temp, 0, temp.length);
+            List<Tetromino> toAdd = Arrays.asList(temp);
             Collections.shuffle(toAdd, pieceGen);
             nextPieces.addAll(toAdd);
         }
@@ -152,9 +158,9 @@ public class Board {
         Point[][] kickMatrix;
         
         if(activePiece.letter == "I")
-            kickMatrix = Game.rotMatrixI;
+            kickMatrix = DataSets.ROT_MATRIX_I;
         else
-            kickMatrix = Game.rotMatrixRest;
+            kickMatrix = DataSets.ROT_MATRIX_REST;
         
         Object[] vals = getRotationTranslation(activePiece, pieceRot, right, pieceOrigin, kickMatrix);
         if((Integer) vals[0] >= 0){
@@ -499,9 +505,9 @@ public class Board {
                     Point[][] rotMatrix;
                     // Get the right rotation matrix for the piece
                     if(activePiece.letter.equals("I"))
-                        rotMatrix = Game.rotMatrixI;
+                        rotMatrix = DataSets.ROT_MATRIX_I;
                     else
-                        rotMatrix = Game.rotMatrixRest;
+                        rotMatrix = DataSets.ROT_MATRIX_REST;
                     
                     // Slide left
                     workingY = dropY;
@@ -688,6 +694,12 @@ public class Board {
         solidGarbageRows++;
     }
 
+
+    public void checkPieceExists() {
+        if(activePiece == null)
+            addPiece();
+    }
+    
     public Player getPlayer() {
         return player;
     }
@@ -706,6 +718,10 @@ public class Board {
         return background;
     }
     
+    public int getLinesCleared(){
+        return linesClear;
+    }
+    
     public int getGarbageLevel() {
         return garbageLevel;
     }
@@ -714,18 +730,36 @@ public class Board {
         this.garbageLevel = garbageLevel;
     }
     
-    public int getLinesCleared(){
-        return linesClear;
-    }
-    
     public void setActivePiece(Tetromino piece){
         this.activePiece = piece;
     }
-
-    public void checkPieceExists() {
-        if(activePiece == null)
-            addPiece();
+    
+    public Tetromino getActivePiece(){
+        return this.activePiece;
     }
 
+    public void setPieceRot(int rot) {
+        this.pieceRot = rot;
+    }
+    
+    public int getPieceRot(){
+        return this.pieceRot;
+    }
+
+    public String toString(){
+        String str = "";
+        for (int y = 25; y >= 0; y--) {
+            for (int x = 0; x < board.length; x++) {
+                str += (board[x][y] == background ? "." : "X");
+            }
+            str += "\n";
+        }
+        return str;
+    }
+
+    Point getOrigin() {
+        return this.pieceOrigin;
+    }
+    
 }
 

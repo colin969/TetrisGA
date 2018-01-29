@@ -17,11 +17,6 @@ import java.util.Random;
  * @author Colin Berry
  */
 public class Game {
-
-	public static Tetromino[] tetrominoes;
-        // [transistion][test]
-        public static Point[][] rotMatrixI;
-        public static Point[][] rotMatrixRest;
         
         private int step;
         
@@ -44,84 +39,6 @@ public class Game {
             gameEnded = false;
             garbage = true;
             singlePlayer = false;
-            tetrominoes = new Tetromino[7];
-            // I Block
-            tetrominoes[0] = new Tetromino("I", Color.CYAN, new Point[][]{
-                {new Point(0,2), new Point(1,2), new Point(2,2), new Point(3,2)},
-                {new Point(2,0), new Point(2,1), new Point(2,2), new Point(2,3)},
-                {new Point(0,1), new Point(1,1), new Point(2,1), new Point(3,1)},
-                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(1,3)} 
-            });
-            
-            // J Block
-            tetrominoes[1] = new Tetromino("J", Color.BLUE, new Point[][]{
-                {new Point(0,1), new Point(1,1), new Point(2,1), new Point(0,2)},
-                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(2,2)},
-                {new Point(0,1), new Point(1,1), new Point(2,1), new Point(2,0)},
-                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(0,0)}
-            });
-            
-            // L Block
-            tetrominoes[2] = new Tetromino("L", Color.ORANGE, new Point[][]{
-                {new Point(0,1), new Point(1,1), new Point(2,1), new Point(2,2)},
-                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(2,0)},
-                {new Point(0,0), new Point(0,1), new Point(1,1), new Point(2,1)},
-                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(0,2)}
-            });
-            
-            // O Block
-            tetrominoes[3] = new Tetromino("O", Color.YELLOW, new Point[][]{
-                {new Point(1,1), new Point(2,1), new Point(1,2), new Point(2,2)},
-                {new Point(1,1), new Point(2,1), new Point(1,2), new Point(2,2)},
-                {new Point(1,1), new Point(2,1), new Point(1,2), new Point(2,2)},
-                {new Point(1,1), new Point(2,1), new Point(1,2), new Point(2,2)}
-            });
-            
-            // S Block
-            tetrominoes[4] = new Tetromino("O", Color.GREEN, new Point[][]{
-                {new Point(0,1), new Point(1,1), new Point(1,2), new Point(2,2)},
-                {new Point(1,2), new Point(1,1), new Point(2,1), new Point(2,0)},
-                {new Point(0,0), new Point(1,0), new Point(1,1), new Point(2,1)},
-                {new Point(0,2), new Point(0,1), new Point(1,1), new Point(1,0)}
-            });
-            
-            // T Block
-            tetrominoes[5] = new Tetromino("T", Color.PURPLE, new Point[][]{
-                {new Point(0,1), new Point(1,1), new Point(2,1), new Point(1,2)},
-                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(2,1)},
-                {new Point(0,1), new Point(1,1), new Point(2,1), new Point(1,0)},
-                {new Point(1,0), new Point(1,1), new Point(1,2), new Point(0,1)}
-            });
-            
-            // Z Block
-            tetrominoes[6] = new Tetromino("Z", Color.RED, new Point[][]{
-                {new Point(0,2), new Point(1,2), new Point(1,1), new Point(2,1)},
-                {new Point(1,0), new Point(1,1), new Point(2,1), new Point(2,2)},
-                {new Point(0,1), new Point(1,1), new Point(1,0), new Point(2,0)},
-                {new Point(0,0), new Point(0,1), new Point(1,1), new Point(1,2)}
-            });
-            
-            rotMatrixRest = new Point[][]{
-            /* 0 > 1 */ { new Point( 0, 0), new Point(-1, 0), new Point(-1, 1), new Point( 0,-2), new Point(-1,-2)},
-            /* 1 > 1 */ { new Point( 0, 0), new Point( 1, 0), new Point( 1,-1), new Point( 0, 2), new Point( 1, 2)},
-            /* 1 > 2 */ { new Point( 0, 0), new Point( 1, 0), new Point( 1,-1), new Point( 0, 2), new Point( 1, 2)},
-            /* 2 > 1 */ { new Point( 0, 0), new Point(-1, 0), new Point(-1, 1), new Point( 0,-2), new Point(-1,-2)},
-            /* 2 > 3 */ { new Point( 0, 0), new Point( 1, 0), new Point( 1, 1), new Point( 0,-2), new Point( 1,-2)},
-            /* 3 > 2 */ { new Point( 0, 0), new Point(-1, 0), new Point(-1,-1), new Point( 0, 2), new Point(-1, 2)},
-            /* 3 > 0 */ { new Point( 0, 0), new Point(-1, 0), new Point(-1,-1), new Point( 0, 2), new Point(-1, 2)},
-            /* 0 > 3 */ { new Point( 0, 0), new Point( 1, 0), new Point( 1, 1), new Point( 0,-2), new Point( 1,-2)}
-            };
-            
-            rotMatrixI = new Point[][]{
-            /* 0 > 1 */ { new Point( 0, 0), new Point(-2, 0), new Point( 1, 0), new Point(-2,-1), new Point( 1, 2)},
-            /* 1 > 1 */ { new Point( 0, 0), new Point( 2, 0), new Point(-1, 0), new Point( 2, 1), new Point(-1,-2)},
-            /* 1 > 2 */ { new Point( 0, 0), new Point(-1, 0), new Point( 2, 0), new Point(-1, 2), new Point( 2,-1)},
-            /* 2 > 1 */ { new Point( 0, 0), new Point( 1, 0), new Point(-2, 0), new Point( 1,-2), new Point(-2, 1)},
-            /* 2 > 3 */ { new Point( 0, 0), new Point( 2, 0), new Point(-1, 0), new Point( 2, 1), new Point(-1,-2)},
-            /* 3 > 2 */ { new Point( 0, 0), new Point(-2, 0), new Point( 1, 0), new Point(-2,-1), new Point( 1, 2)},
-            /* 3 > 0 */ { new Point( 0, 0), new Point( 1, 0), new Point(-2, 0), new Point( 1,-2), new Point(-2, 1)},
-            /* 0 > 3 */ { new Point( 0, 0), new Point(-1, 0), new Point( 2, 0), new Point(-1, 2), new Point( 2,-1)}
-            };
             
 	}
 

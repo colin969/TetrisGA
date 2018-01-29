@@ -15,7 +15,7 @@ public class TestBoards {
     public static final Point[] ROTATE = {
         new Point(5,0), new Point(5,1), new Point(5,2),
         new Point(6,0), new Point(6,2),
-        new Point(7,5),
-        new Point(8,0), new Point(8,1), new Point(8,2), new Point(8,3), new Point(8,4), new Point(8,5)
+        new Point(7,4),
+        new Point(8,0), new Point(8,1), new Point(8,2), new Point(8,3), new Point(8,4)
     };
 }
