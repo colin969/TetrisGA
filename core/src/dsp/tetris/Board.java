@@ -631,14 +631,6 @@ public class Board {
         renderer.rect(xAnchor, yAnchor, boardWidth, boardHeight);
     }
 
-    public boolean isAlive(){
-        return this.isAlive;
-    }
-
-    public int getScore() {
-        return score;
-    }
-
     public void queueGarbage(int garbageLevel) {
         this.queuedGarbage += garbageLevel;
     }
@@ -698,6 +690,14 @@ public class Board {
     public void checkPieceExists() {
         if(activePiece == null)
             addPiece();
+    }
+    
+    public boolean isAlive(){
+        return this.isAlive;
+    }
+
+    public int getScore() {
+        return score;
     }
     
     public Player getPlayer() {

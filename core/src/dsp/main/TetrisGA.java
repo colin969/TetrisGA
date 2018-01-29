@@ -83,7 +83,8 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                     // Game ended, process results, start next game
                     if(game.gameEnded){
                         if(gen && lastGameGen){
-                            ga.returnResults(game.results);
+                            // Return left board (evaluating) result
+                            ga.returnResults(game.results[0]);
                             // Check for change in generation
                             if(ga.getGen() != lastGen){
                                 testCase = new Player(true, ga.getBest(), false, 1);

@@ -12,14 +12,14 @@ import java.util.Random;
  * @author Colin Berry
  */
 public class GA {
-    private int weights = 8;
+    public static final int NUM_WEIGHTS = 8;
     
     private Population pop;
     private Individual workingInd;
     
     public void init(){
-        pop = new Population(10, weights, 0.95F, 0.08F);
-        
+        pop = new Population(10, NUM_WEIGHTS, 0.95F, 0.08F);
+        workingInd = null;
         
     }
     
@@ -32,9 +32,14 @@ public class GA {
         return workingInd.weights;
     }
     
-    public void returnResults(int[] results){
-        workingInd.fitness = results[0];
+    public void returnResults(int result){
+        workingInd.fitness = result;
         pop.processEval(workingInd);
+    }
+    
+    // TODO
+    public void printToCSV(){
+        
     }
     
     public float[] getRandom(){
