@@ -692,6 +692,20 @@ public class Board {
         return player;
     }
     
+    public Color[][] getBoard(){
+        return board;
+    }
+    
+    public void setOrigin(Point origin){
+        if(!collides(origin, pieceRot)){
+            this.pieceOrigin = origin;
+        }
+    }
+    
+    public Color getBackground(){
+        return background;
+    }
+    
     public int getGarbageLevel() {
         return garbageLevel;
     }

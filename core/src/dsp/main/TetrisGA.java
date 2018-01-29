@@ -30,9 +30,11 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
         private boolean fullRender;
         private float savedUpdateRate;
         private boolean paused;
+        private Player heldSolution;
         
         private GA ga;
         private boolean gen = true;
+        private boolean lastGameGen;
 	
 	@Override
 	public void create () {
@@ -47,8 +49,10 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 
                 testCase = new Player(true, new float[]{-0.8744863F, 0.025707256F, 0.2459504F, -0.14321329F, -0.67774916F, -0.33289695F, -0.77588874F, -0.49761575F}, false, 1);
                 lastGen = 1;
-                if(gen)
+                if(gen){
                     game.resetGame(new Player(true, ga.startGame(), false, 0), testCase);
+                    lastGameGen = true;
+                }
                 else
                     game.resetGame(new Player(false, false, 0), testCase);
                 
@@ -78,7 +82,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 if(!paused){
                     // Game ended, process results, start next game
                     if(game.gameEnded){
-                        if(gen){
+                        if(gen && lastGameGen){
                             ga.returnResults(game.results);
                             // Check for change in generation
                             if(ga.getGen() != lastGen){
@@ -88,7 +92,12 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                                 game.updateSeed();
                             }
                             game.resetGame(new Player(true, ga.startGame(), false, 0), testCase);
-                        } else {
+                        } 
+                        if(gen && !lastGameGen){
+                            game.resetGame(heldSolution, testCase);
+                            lastGameGen = true;
+                        }
+                        if (!gen){
                             game.resetGame(new Player(false, false, 0), testCase);
                         }
                     }
@@ -198,6 +207,10 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
             if(keycode == Keys.ENTER){
                 gen = !gen;
                 game.gameEnded = true;
+                if(!gen){
+                    lastGameGen = false;
+                    heldSolution = game.getBoard(0).getPlayer();
+                }
             }
             
             if(!gen && !paused){
