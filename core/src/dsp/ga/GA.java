@@ -5,7 +5,16 @@
  */
 package dsp.ga;
 
+import com.opencsv.CSVWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -13,13 +22,33 @@ import java.util.Random;
  */
 public class GA {
     public static final int NUM_WEIGHTS = 8;
+    public static final int POP_SIZE = 15;
     
     private Population pop;
     private Individual workingInd;
+    private CSVWriter csv;
     
     public void init(){
-        pop = new Population(10, NUM_WEIGHTS, 0.95F, 0.08F);
+        pop = new Population(POP_SIZE, NUM_WEIGHTS, 0.95F, 0.05F);
         workingInd = null;
+        
+        try{
+            Date date = new Date();
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(date);
+            
+            Writer writer = Files.newBufferedWriter(Paths.get(String.format("./training_%s-%s.csv", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))));
+
+            csv = new CSVWriter(writer,
+                    CSVWriter.DEFAULT_SEPARATOR,
+                    CSVWriter.NO_QUOTE_CHARACTER,
+                    CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                    CSVWriter.DEFAULT_LINE_END);
+            
+            String[] headers = {"Generation", "Relative Fitness", "Best Weights"};
+            csv.writeNext(headers);
+        } catch (IOException e){
+        }
         
     }
     
@@ -39,7 +68,14 @@ public class GA {
     
     // TODO
     public void printToCSV(){
-        
+        Individual best = pop.getBest();
+        String[] data = new String[2 + NUM_WEIGHTS];
+        data[0] = String.valueOf(pop.generation);
+        for (int i = 0; i < NUM_WEIGHTS; i++) {
+            data[i+2] = String.valueOf(best.weights[i]);
+        }
+        data[1] = String.valueOf(best.fitness);
+        csv.writeNext(data);
     }
     
     public float[] getRandom(){
@@ -64,6 +100,14 @@ public class GA {
 
     public void printGen() {
         System.out.println(String.format("Best Individual\n%s", pop.getBest()));
+    }
+
+    public void closeCSV() {
+        try {
+            csv.close();
+        } catch (IOException ex) {
+            Logger.getLogger(GA.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     

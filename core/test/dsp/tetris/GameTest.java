@@ -5,9 +5,6 @@
  */
 package dsp.tetris;
 
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
