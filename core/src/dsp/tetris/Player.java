@@ -47,22 +47,11 @@ public class Player {
             
             // Set initial move
             bestAction = actions.get(0);
-            if(bestAction.clears > 0)
-                bestScore += genome[bestAction.clears-1];
-            bestScore += genome[4] * (float)bestAction.holes;
-            bestScore += genome[5] * (float)bestAction.height;
-            bestScore += genome[6] * (float)bestAction.aggregateHeight;
-            bestScore += genome[7] * (float)bestAction.bumpiness;
+            bestScore = addUp(bestAction);
             
             // Find best move(s)
             for(Action action : actions){
-                float totalScore = 0;
-                if(action.clears > 0)
-                    totalScore += genome[action.clears-1];
-                totalScore += genome[4] * (float)action.holes;
-                totalScore += genome[5] * (float)action.height;
-                totalScore += genome[6] * (float)action.aggregateHeight;
-                totalScore += genome[7] * (float)action.bumpiness;
+                float totalScore = addUp(action);
                 if(totalScore > bestScore){
                     bestAction = action;
                     bestScore = totalScore;
@@ -71,6 +60,20 @@ public class Player {
             if(debug)
                 System.out.println(bestAction);
             return bestAction;
+        }
+        
+        private float addUp(Action action){
+            float totalScore = 0;
+            if(action.clears > 0)
+                totalScore += genome[action.clears-1];
+            totalScore += genome[4] * (float)action.holes;
+            totalScore += genome[5] * (float)action.height;
+            totalScore += genome[6] * (float)action.aggregateHeight;
+            totalScore += genome[7] * (float)action.bumpiness;
+            totalScore += genome[8] * (float)action.highest;
+            totalScore += genome[9] * (float)action.altitudeDiff;
+            totalScore += genome[10] * (float)action.weightedClears;
+            return totalScore;
         }
         
         public boolean getCpu(){

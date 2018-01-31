@@ -54,7 +54,6 @@ public class Board {
     private int linesClear;
     private int step;
 
-    public boolean playerActed;
     private int score;
 
     private Player player;
@@ -63,7 +62,6 @@ public class Board {
         step = 1;
         linesClear = 0;
         solidGarbageRows = 0;
-        playerActed = false;
 
         board =  new Color[10][boardHeightCells];
         results = 1;
@@ -96,14 +94,9 @@ public class Board {
     }
 
     public void doStep() {
-        step++;
         if(activePiece == null){
             addPiece();
-        } else if(!playerActed){
-            softDrop();
         }
-        
-        playerActed = false;
 
         if(player.getCpu() && isAlive){
             if(holdPiece == null){
@@ -157,7 +150,7 @@ public class Board {
     public void rotate(boolean right) {
         Point[][] kickMatrix;
         
-        if(activePiece.letter == "I")
+        if(activePiece.letter.equals("I"))
             kickMatrix = DataSets.ROT_MATRIX_I;
         else
             kickMatrix = DataSets.ROT_MATRIX_REST;
@@ -218,6 +211,7 @@ public class Board {
     }
 
     private void lockPiece() {
+        step++;
         for(Point p : activePiece.point[pieceRot]){
             board[pieceOrigin.x + p.x][pieceOrigin.y + p.y] = activePiece.color;
         }
@@ -295,8 +289,10 @@ public class Board {
         return clears;
     }
 
-    private int boardCheckClears(Point[] piece, Point origin) {
+    private int[] boardCheckClears(Point[] piece, Point origin) {
+        int[] data = new int[2];
         int clears = 0;
+        int weighted = 0;
 
         // Only check possible changed rows
         for(int plusY = 0; plusY < 4; plusY++){
@@ -316,12 +312,17 @@ public class Board {
                             break;
                     }
                 }
-                if(clear)
+                if(clear){
+                    // n-th row counts n times
+                    weighted += y*y;
                     clears++;
+                }
             }
         }
 
-        return clears;
+        data[0] = clears;
+        data[1] = weighted;
+        return data;
     }
 
     private int boardCheckHoles(Point[] piece, Point origin){
@@ -405,17 +406,19 @@ public class Board {
         
         action.origin = origin;
 
-        // Get number of line clears
-        action.clears = boardCheckClears(piece, origin);
+        // NUM OF CLEARS & WEIGHTED VARIANT
+        int[] clearsInfo = boardCheckClears(piece, origin);
+        action.clears = clearsInfo[0];
+        action.weightedClears = clearsInfo[1];
 
-        // Get number of holes it would produce
+        // NUM OF PRODUCED HOLES
         action.holes = boardCheckHoles(piece, origin);
 
         int[] colChange = new int[10];
         for(int i = 0; i < 10; i++)
             colChange[i] = 0;
 
-        // Calculate any changes to the current heights of the board
+        // HEIGHT OF PIECE
         action.height = 0;
         for(Point p : piece){
             int tempY = p.y + origin.y;
@@ -425,18 +428,27 @@ public class Board {
                 colChange[action.origin.x + p.x] = tempY+1;
         }
 
+        // AGGREGATE HEIGHT AND BUMPINESS
         int aggregateHeight = 0;
         int bumpiness = 0;
+        int highest = 0;
+        int lowest = 100;
         for(int colHeight = 0; colHeight < 10; colHeight++){
             int firstHeight = colChange[colHeight] == 0 ? colHeights[colHeight] : colChange[colHeight];
             if(colHeight < 9){
                 int secondHeight = colChange[colHeight+1] == 0 ? colHeights[colHeight+1] : colChange[colHeight+1];
                 bumpiness += Math.abs(firstHeight - secondHeight);
             }
+            if(firstHeight > highest)
+                highest = firstHeight;
+            if(firstHeight < lowest)
+                lowest = firstHeight;
             aggregateHeight += firstHeight;
         }
         action.aggregateHeight = aggregateHeight;
         action.bumpiness = bumpiness;
+        action.highest = highest;
+        action.altitudeDiff = highest - lowest;
     }
     
     private void getActionsForDropPoint(ArrayList<Action> validActions, int y, Tetromino piece, int col, boolean swap, int rot, Point[][] rotMatrix, int[] colHeights){
@@ -552,8 +564,6 @@ public class Board {
 
     // Draw board
     public void draw(ShapeRenderer renderer){
-
-        int borderThickness = 1;
         // Draw Current Pieces
         renderer.set(ShapeType.Filled);
         for(int x = 0; x < board.length; x++){
@@ -636,7 +646,7 @@ public class Board {
     }
 
     public int getResults() {
-        results = this.score;
+        results = this.score / 10;
         
         // Differentiate between very fast losers (positive height weight) and other individuals by penalising weight very slightly.
         int height = 0;
@@ -652,10 +662,11 @@ public class Board {
         }
         results -= height;
         
+        // 1000 reward, decreases more slowly over time (very fast wins make very fast points)
         if(isAlive)
-            results += 1000000/step;
+            results += 10000000/step;
         else
-            results -= 1000000/step;
+            results -= 10000000/step;
         return results;
     }
 
@@ -746,6 +757,7 @@ public class Board {
         return this.pieceRot;
     }
 
+    @Override
     public String toString(){
         String str = "";
         for (int y = 25; y >= 0; y--) {
@@ -759,6 +771,10 @@ public class Board {
 
     Point getOrigin() {
         return this.pieceOrigin;
+    }
+
+    int getStep() {
+        return this.step;
     }
     
 }

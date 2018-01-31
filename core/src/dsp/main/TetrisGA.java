@@ -23,7 +23,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
         private float timePassed;
         private long lastPress;
         private boolean stillPressed;
-        private long repeatTime = (long) (0.2 * 1000.0);
+        private long repeatTime;
         private Player testCase;
         private int lastGen;
         private boolean fullRender;
@@ -45,8 +45,9 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 timePassed = 0;
                 lastPress = 0;
                 stillPressed = false;
+                repeatTime = (long) (0.2 * 1000.0);
                 
-                testCase = new Player(true, new float[]{-0.8744863F, 0.025707256F, 0.2459504F, -0.14321329F, -0.67774916F, -0.33289695F, -0.77588874F, -0.49761575F}, false, 1);
+                testCase = new Player(true, ga.getRandom(), false, 1);
                 lastGen = 1;
                 if(gen){
                     game.resetGame(new Player(true, ga.startGame(), false, 0), testCase);
@@ -138,7 +139,6 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
             Board board = game.getPlayerBoard(0);
             if(board != null){
                 board.checkPieceExists();
-                board.playerActed = true;
                 
                 if (Gdx.input.isKeyPressed(Keys.DOWN))
                     board.softDrop();
@@ -147,7 +147,6 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 else if (Gdx.input.isKeyPressed(Keys.RIGHT))
                     board.slide(true);
                 else{
-                    board.playerActed = false;
                     stillPressed = false;
                 }
             }
@@ -218,7 +217,6 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 if(board != null){
                     if(board.isAlive()){
                         board.checkPieceExists();
-                        board.playerActed = true;
                         stillPressed = true;
                         lastPress = System.currentTimeMillis();
 
@@ -236,8 +234,6 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                             board.rotate(false);
                         else if (keycode == Keys.C)
                             board.hold();
-                        else
-                            board.playerActed = false;
                     }
                 }
             }

@@ -13,23 +13,21 @@ import java.nio.file.Paths;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  * @author Colin Berry
  */
 public class GA {
-    public static final int NUM_WEIGHTS = 8;
-    public static final int POP_SIZE = 15;
+    public static final int NUM_WEIGHTS = 11;
+    public static final int POP_SIZE = 50;
     
     private Population pop;
     private Individual workingInd;
     private CSVWriter csv;
     
     public void init(){
-        pop = new Population(POP_SIZE, NUM_WEIGHTS, 0.95F, 0.05F);
+        pop = new Population(POP_SIZE, NUM_WEIGHTS, 0.85F, 0.03F);
         workingInd = null;
         
         try{
@@ -106,7 +104,7 @@ public class GA {
         try {
             csv.close();
         } catch (IOException ex) {
-            Logger.getLogger(GA.class.getName()).log(Level.SEVERE, null, ex);
+            
         }
     }
     

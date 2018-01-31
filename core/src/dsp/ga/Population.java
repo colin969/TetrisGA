@@ -20,8 +20,8 @@ public class Population {
     public Individual nextToEval;
     
     int popSize;
-    private float elitism = 0.2F;
-    private float mutationDelta = 0.2F;
+    private float elitism = 0.05F;
+    private float mutationDelta = 50F;
     private int numOfFloats;
     private float crossover;
     private float mutation;
@@ -43,7 +43,7 @@ public class Population {
             Individual ind = new Individual();
             float[] weights = new float[numOfFloats];
             for(int w = 0; w < numOfFloats; w++){
-                weights[w] = rand.nextFloat() * (rand.nextBoolean() ? 1 : -1);
+                weights[w] = mutationDelta * rand.nextFloat() * (rand.nextBoolean() ? 1 : -1);
             }
             ind.weights = weights;
             pop.add(ind);
@@ -75,11 +75,11 @@ public class Population {
         Random rand = new Random();
         
         Collections.sort(pop);       
-        for(int i = 0; i < (int)((float) popSize * elitism); i++){
+        for(int i = 0; i < Math.floor((float) popSize * elitism); i++){
             newPop.add(pop.get(popSize-(i+1)));
         }
         
-        for(int i = 0; i < (int)((float) popSize * (1F - elitism)); i++){
+        for(int i = 0; i < Math.ceil((float) popSize * (1F - elitism)); i++){
             Individual parent1 = tempPop.get(rand.nextInt(popSize));
             Individual parent2 = tempPop.get(rand.nextInt(popSize));
             
@@ -89,7 +89,6 @@ public class Population {
                 newPop.add(parent2);
             }
         }
-        
         return newPop;
     }
     
@@ -104,7 +103,7 @@ public class Population {
                 Individual parent2 = tempPop.get(rand.nextInt(popSize));
                 int crossoverPoint = rand.nextInt(numOfFloats);
 
-                float[] weights = new float[numOfFloats];
+                float[] weights;
 
                 weights = parent1.weights.clone();
                 for(int j = crossoverPoint; j < numOfFloats; j++){
@@ -126,7 +125,7 @@ public class Population {
         for(Individual i : tempPop){
             for(int w = 0; w < numOfFloats; w++){
                 if(rand.nextFloat() < mutation){
-                    i.weights[w] += mutationDelta * (rand.nextBoolean() ? 1 : -1) * rand.nextFloat();
+                    i.weights[w] = mutationDelta * (rand.nextBoolean() ? 1 : -1) * rand.nextFloat();
                 }
             }
         }

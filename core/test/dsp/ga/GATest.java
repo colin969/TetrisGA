@@ -5,6 +5,12 @@
  */
 package dsp.ga;
 
+import java.io.File;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Calendar;
+import java.util.Date;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -22,7 +28,6 @@ public class GATest {
     
     @BeforeClass
     public static void setUpClass() {
-        ga = new GA();
     }
     
     @AfterClass
@@ -31,11 +36,13 @@ public class GATest {
     
     @Before
     public void setUp() {
+        ga = new GA();
         ga.init();
     }
     
     @After
     public void tearDown() {
+        ga.closeCSV();
     }
 
     // startGame should return a set of weights, each randomly between -1 and 1
@@ -55,21 +62,32 @@ public class GATest {
         assertTrue(weights[2] != weights[3]);
     }
     
-    // Generation should change after 10 returns, to ensure evaluation is taking place
+    // Generation should change after 10 returns, to ensure evaluation and swapping is taking place
     @Test
     public void returnResults(){
         assertTrue(ga.getGen() == 1);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < GA.POP_SIZE; i++) {
             ga.startGame();
             ga.returnResults(0);
         }
         assertTrue(ga.getGen() == 2);
     }
     
-    // TODO
+    // Ensures a CSV is present at the end
     @Test
     public void printToCSV(){
-        fail("TODO");
+        ga.printToCSV();
+        Date date = new Date();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+            
+        File file = new File(String.format("./training_%s-%s.csv", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE)));
+        ga.closeCSV();
+        assertTrue(file.exists());
+        if(file.exists()){
+            // Clean up test file
+            file.delete();
+        }
     }
     
 }

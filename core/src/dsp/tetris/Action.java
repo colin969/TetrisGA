@@ -13,18 +13,18 @@ import java.awt.Point;
  */
 public class Action {
 
+        // 4 seperate weights for Clears
         public int clears;
+        public int weightedClears;
         public int height;
         public int aggregateHeight;
         public int holes;
         public int bumpiness;
+        public int highest;
+        public int altitudeDiff;
         public Point origin;
         public int rot;
         public boolean swap;
-        
-        public Action(int clears, int height, int holes, int aggregateHeight){}
-        
-        public Action(){}
         
         @Override
         public String toString(){

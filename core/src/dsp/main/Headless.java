@@ -21,7 +21,7 @@ public class Headless {
         ga.init();
         Player testCase = new Player(true, ga.getRandom(), false, 1);
         int lastGen = 1;
-        int gensToRun = 10;
+        int gensToRun = 30;
         
         game.resetGame(new Player(true, ga.startGame(), false, 0), testCase);
         

@@ -32,7 +32,7 @@ public class Game {
         
         public boolean singlePlayer;
         
-        public int stepsPerPermagarbage = 150;
+        public int stepsPerPermagarbage = 500;
 
 	public void init() {
             results = new int[2];
@@ -62,7 +62,7 @@ public class Game {
             
             // Draw step and score values
             batch.begin();
-            font.draw(batch, String.format("Piece\n%s", step), 220, 480);
+            font.draw(batch, String.format("Piece\n%s", boards[0].getStep()), 220, 480);
             font.draw(batch, String.format("Score\n%s", boards[0].getScore()) , 220, 440);
             font.draw(batch, String.format("Lines\n%s", boards[0].getLinesCleared()), 270, 480);
             batch.end();
@@ -71,15 +71,14 @@ public class Game {
         
         public void doStep(){
             // Add permanent garbage every specified number of steps
-            if(step % stepsPerPermagarbage == 0){
+            if(boards[0].getStep() % stepsPerPermagarbage == 0){
                 boards[0].addSolidLine();
-                if(!singlePlayer)
-                    boards[1].addSolidLine();
+                boards[1].addSolidLine();
             }
             
             // Process the action for this step
             boards[0].doStep();
-            if(!singlePlayer)
+            while(boards[0].getStep() > boards[1].getStep())
                 boards[1].doStep();
             
             // Move any garbage created to other board
