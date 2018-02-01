@@ -19,8 +19,8 @@ import java.util.Random;
  * @author Colin Berry
  */
 public class GA {
-    public static final int NUM_WEIGHTS = 11;
-    public static final int POP_SIZE = 50;
+    public static final int NUM_WEIGHTS = 13;
+    public static final int POP_SIZE = 100;
     
     private Population pop;
     private Individual workingInd;

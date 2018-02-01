@@ -22,13 +22,18 @@ public class Action {
         public int bumpiness;
         public int highest;
         public int altitudeDiff;
+        public int tSpin;
+        public int miniTSpinClear;
         public Point origin;
         public int rot;
         public boolean swap;
         
         @Override
         public String toString(){
-            return String.format("Origin - %s - Rotation - %s - Holes %s - Height %s - Aggregate Height %s - Clears %s - Bumpiness %s", origin, rot, holes, height, aggregateHeight, clears, bumpiness);
+            return String.format("Origin - %s - Rotation - %s - Holes %s - Height %s - Aggregate Height %s - Clears %s\n"
+                    + "Weighted Clears %s - Bumpiness %s - AltitudeDiff %s - Highest %s - T Spin %s - Mini T Spin Clear %s", 
+                    origin, rot, holes, height, aggregateHeight, clears, 
+                    weightedClears, bumpiness, altitudeDiff, highest, tSpin, miniTSpinClear);
         }
 
 }

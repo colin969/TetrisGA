@@ -42,6 +42,8 @@ public class Board {
     private int queuedGarbage;
     private int garbageHole;
     private Random garbageRand;
+    private int tSpinIncoming;
+    private boolean lastMoveDifficult;
 
     private Tetromino activePiece;
     private Queue<Tetromino> nextPieces;
@@ -62,7 +64,9 @@ public class Board {
         step = 1;
         linesClear = 0;
         solidGarbageRows = 0;
-
+        tSpinIncoming = 0;
+        lastMoveDifficult = false;
+        
         board =  new Color[10][boardHeightCells];
         results = 1;
         for (int x = 0; x < 10; x++) {
@@ -107,6 +111,7 @@ public class Board {
             if(!actions.isEmpty()){
                 Action action = player.nextMove(actions);
                 if(action != null){
+                    tSpinIncoming = action.tSpin;
                     this.cpuDrop(action.origin, action.rot, action.swap);
                 }
             } else {
@@ -219,10 +224,24 @@ public class Board {
         int lines = clearLines();
         linesClear += lines;
         if(lines > 0){
-            // 100, 300, 500, 800
-            score += (comboLevel * 50) + 100 + (200 * (lines-1));
-            // 0, 1, 2, 4
-            garbageLevel = (lines - 1) + (lines / 4);
+            // Generate Garbage
+            if(tSpinIncoming == 2){
+                // 2, 4, 6 garbage for 1, 2, 3 clears ( T Piece can't make 4 )
+                garbageLevel = lines * 2; 
+                // 400 for T Spin, 400 per Clear
+                score += 400 + (400 * lines);
+            } else {
+                // 0, 1, 2, 4 garbage for 1, 2, 3, 4 clears
+                garbageLevel = (lines - 1) + (lines / 4);
+                if(tSpinIncoming == 1){
+                    // 100 for Mini, 200 for Clear
+                    score += 100 + (lines * 100);
+                } else {
+                    // 100, 300, 500, 800 for 1, 2, 3, 4 clears
+                    score += 100 + (200 * (lines-1));
+                }
+            }
+            
             // Garbage cancelling
             if(queuedGarbage > 0){
                 queuedGarbage -= garbageLevel;
@@ -289,7 +308,7 @@ public class Board {
         return clears;
     }
 
-    private int[] boardCheckClears(Point[] piece, Point origin) {
+    private int[] boardCheckClears(Point[] piece, Point origin, Color[][] board) {
         int[] data = new int[2];
         int clears = 0;
         int weighted = 0;
@@ -313,8 +332,8 @@ public class Board {
                     }
                 }
                 if(clear){
-                    // n-th row counts n times
-                    weighted += y*y;
+                    // n-th row counts n times - 0th row is bottom, so push up 1
+                    weighted += (y+1)*(y+1);
                     clears++;
                 }
             }
@@ -324,8 +343,27 @@ public class Board {
         data[1] = weighted;
         return data;
     }
+    
+    private int[] boardCheckTransistions(Point[] piece, Point origin, int[] actionHeights, Color[][] board){
+        for (int col = 0; col < 10; col += 2) {
+            // Side by side empty spaces
+            if(actionHeights[col] == actionHeights[col+1]){
+                boolean left = false;
+                boolean right = false;
+                if(col+1 < 9){
+                    if(board[col+1][actionHeights[col]] != background){
+                        continue;
+                    }
+                } else {
+                    
+                }
+                
+            }
+        }
+        return null;
+    }
 
-    private int boardCheckHoles(Point[] piece, Point origin){
+    private int boardCheckHoles(Point[] piece, Point origin, Color[][] board){
         Point[] topPieces = new Point[4];
         int topPieceCount = 0;
 
@@ -407,12 +445,12 @@ public class Board {
         action.origin = origin;
 
         // NUM OF CLEARS & WEIGHTED VARIANT
-        int[] clearsInfo = boardCheckClears(piece, origin);
+        int[] clearsInfo = boardCheckClears(piece, origin, board);
         action.clears = clearsInfo[0];
         action.weightedClears = clearsInfo[1];
 
         // NUM OF PRODUCED HOLES
-        action.holes = boardCheckHoles(piece, origin);
+        action.holes = boardCheckHoles(piece, origin, board);
 
         int[] colChange = new int[10];
         for(int i = 0; i < 10; i++)
@@ -427,23 +465,29 @@ public class Board {
             if(colChange[action.origin.x + p.x] < tempY+1)
                 colChange[action.origin.x + p.x] = tempY+1;
         }
-
-        // AGGREGATE HEIGHT AND BUMPINESS
+        
+        // ROW TRANSISTION
+        int[] actionHeights = new int[10];
+        for (int i = 0; i < 10; i++) {
+            actionHeights[i] = colChange[i] == 0 ? colHeights[i] : colChange[i];
+        }
+        
+        int[] transistions = boardCheckTransistions(piece, origin, actionHeights, board);
+        
+        // HEIGHT RELATED FEATURES
         int aggregateHeight = 0;
         int bumpiness = 0;
         int highest = 0;
         int lowest = 100;
-        for(int colHeight = 0; colHeight < 10; colHeight++){
-            int firstHeight = colChange[colHeight] == 0 ? colHeights[colHeight] : colChange[colHeight];
-            if(colHeight < 9){
-                int secondHeight = colChange[colHeight+1] == 0 ? colHeights[colHeight+1] : colChange[colHeight+1];
-                bumpiness += Math.abs(firstHeight - secondHeight);
+        for(int i = 0; i < 10; i++){
+            if(i < 9){
+                bumpiness += Math.abs(actionHeights[i] - actionHeights[i+1]);
             }
-            if(firstHeight > highest)
-                highest = firstHeight;
-            if(firstHeight < lowest)
-                lowest = firstHeight;
-            aggregateHeight += firstHeight;
+            if(actionHeights[i] > highest)
+                highest = actionHeights[i];
+            if(actionHeights[i] < lowest)
+                lowest = actionHeights[i];
+            aggregateHeight += actionHeights[i];
         }
         action.aggregateHeight = aggregateHeight;
         action.bumpiness = bumpiness;
@@ -451,7 +495,52 @@ public class Board {
         action.altitudeDiff = highest - lowest;
     }
     
-    private void getActionsForDropPoint(ArrayList<Action> validActions, int y, Tetromino piece, int col, boolean swap, int rot, Point[][] rotMatrix, int[] colHeights){
+    // Return - 0 = None, 1 = Mini T Spin, 2 = T Spin
+    private int getTSpinType(Point origin, int rot, Color[][] board){
+        Point[] spinPoints = DataSets.T_SPIN_MATRIX[rot];
+        boolean A = false;
+        boolean B = false;
+        boolean C = false;
+        boolean D = false;
+       
+        // A and B are always in bounds
+        Point Ap = spinPoints[0];
+        Point Bp = spinPoints[1];
+        if(board[origin.x + Ap.x][origin.y + Ap.y] != background)
+            A = true;
+        if(board[origin.x + Bp.x][origin.y + Bp.y] != background)
+            B = true;
+        
+        Point Cp = spinPoints[2];
+        Point Dp = spinPoints[3];
+        
+        // Must check is C and D are out of bounds before checking board
+        int x = Cp.x + origin.x;
+        int y = Cp.y + origin.y;
+        if (x > 9 || x < 0 || y < 0)
+            C = true;
+        else if (board[x][y] != background)
+            C = true;
+        
+        x = Dp.x + origin.x;
+        y = Dp.y + origin.y;
+        if (x > 9 || x < 0 || y < 0)
+            D = true;
+        else if (board[x][y] != background)
+            D = true;
+        
+        // C or D must be touching to be a T Spin 
+        // A and B touching, T Spin
+        if(A && B && (C || D))
+            return 2;
+        // A or B touching, Mini T Spin
+        if(C && D && (A || B))
+            return 1;
+        
+        return 0;
+    }
+    
+    private void getActionsForDropPoint(ArrayList<Action> validActions, int y, Tetromino piece, int col, boolean swap, int rot, Point[][] rotMatrix, int[] colHeights, Color[][] board){
         Action slideAction = new Action();
         slideAction.swap = swap;
         slideAction.rot = rot;
@@ -466,8 +555,15 @@ public class Board {
             newOrigin.y = getLowestValid(piece.point[newRot], newOrigin);
 
             rotAction.rot = newRot;
-            rotAction.swap = swap;
+            rotAction.swap = swap;            
             scoreAction(rotAction, piece.point[newRot], newOrigin, colHeights);
+            rotAction.tSpin = 0;
+            if(piece.letter.equals("T")){
+                int type = getTSpinType(new Point(col, y), rot, board);
+                if(type == 2)
+                    rotAction.tSpin = 1;
+            }
+            
             validActions.add(rotAction);
         }
         // RIGHT
@@ -481,6 +577,13 @@ public class Board {
             rotAction.rot = newRot;
             rotAction.swap = swap;
             scoreAction(rotAction, piece.point[newRot], newOrigin, colHeights);
+            rotAction.tSpin = 0;
+            if(piece.letter.equals("T")){
+                int type = getTSpinType(new Point(col, y), rot, board);
+                if(type == 2)
+                    rotAction.tSpin = 1;
+            }
+            
             validActions.add(rotAction);
         }
     }
@@ -529,7 +632,7 @@ public class Board {
                             break;
                         
                         workingY = getLowestValid(piece.point[rot], new Point(slide, workingY));
-                        getActionsForDropPoint(validActions, workingY, piece, slide, swap, rot, rotMatrix, colHeights);
+                        getActionsForDropPoint(validActions, workingY, piece, slide, swap, rot, rotMatrix, colHeights, board);
                     }
                     
                     // Slide right
@@ -540,7 +643,7 @@ public class Board {
                             break;
                         
                         workingY = getLowestValid(piece.point[rot], new Point(slide, workingY));
-                        getActionsForDropPoint(validActions, workingY, piece, slide, swap, rot, rotMatrix, colHeights);
+                        getActionsForDropPoint(validActions, workingY, piece, slide, swap, rot, rotMatrix, colHeights, board);
                     }
                 }
             }
@@ -646,7 +749,7 @@ public class Board {
     }
 
     public int getResults() {
-        results = this.score / 10;
+        results = 0;
         
         // Differentiate between very fast losers (positive height weight) and other individuals by penalising weight very slightly.
         int height = 0;
