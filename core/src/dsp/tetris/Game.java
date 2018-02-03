@@ -32,7 +32,9 @@ public class Game {
         
         public boolean singlePlayer;
         
-        public int stepsPerPermagarbage = 500;
+        public int stepsPerPermaGarbage = 500;
+        
+        public int nextGarbageStep;
 
 	public void init() {
             results = new int[2];
@@ -46,6 +48,7 @@ public class Game {
             boards = new Board[2];
             gameEnded = false;
             step = 1;
+            nextGarbageStep = stepsPerPermaGarbage;
             
             boards[0] = new Board(playerOne, seed, 10, 10);
             boards[1] = new Board(playerTwo, seed, 310, 10);
@@ -71,7 +74,8 @@ public class Game {
         
         public void doStep(){
             // Add permanent garbage every specified number of steps
-            if(boards[0].getStep() % stepsPerPermagarbage == 0){
+            if(boards[0].getStep() == nextGarbageStep){
+                nextGarbageStep += stepsPerPermaGarbage;
                 boards[0].addSolidLine();
                 boards[1].addSolidLine();
             }

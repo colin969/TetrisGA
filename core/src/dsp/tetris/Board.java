@@ -345,22 +345,41 @@ public class Board {
     }
     
     private int[] boardCheckTransistions(Point[] piece, Point origin, int[] actionHeights, Color[][] board){
-        for (int col = 0; col < 10; col += 2) {
-            // Side by side empty spaces
-            if(actionHeights[col] == actionHeights[col+1]){
-                boolean left = false;
-                boolean right = false;
-                if(col+1 < 9){
-                    if(board[col+1][actionHeights[col]] != background){
-                        continue;
+        
+        int rowTransistions = 0;
+        int weightedRowTransistions = 0;
+        int colTransistions = 0;
+        int weightedColTransistions = 0;
+        
+        for(Point p : piece){
+            board[p.x + origin.x][p.y + origin.y] = Color.BLUE;
+        }
+        
+        for (int col = 0; col < 10; col++) {
+            // Solid Rows below will not have transistions, only check above
+            for (int row = solidGarbageRows; row < 20; row++) {
+                // Check row transistions, ignore rightmost wall
+                if(col != 9) {
+                    if(board[col][row] != background && board[col+1][row] == background
+                            || board[col][row] == background && board[col+1][row] != background){
+                        rowTransistions++;
+                        weightedRowTransistions += (row + 1);
                     }
-                } else {
-                    
+                } 
+                // Check column transistions
+                if(board[col][row] != background && board[col][row+1] == background
+                            || board[col][row] == background && board[col][row+1] != background){
+                    colTransistions++;
+                    weightedColTransistions += (row + 1);
                 }
-                
             }
         }
-        return null;
+        
+        for(Point p : piece){
+            board[p.x + origin.x][p.y + origin.y] = background;
+        }
+        
+        return new int[]{rowTransistions, weightedRowTransistions, colTransistions, weightedColTransistions};
     }
 
     private int boardCheckHoles(Point[] piece, Point origin, Color[][] board){
@@ -473,6 +492,10 @@ public class Board {
         }
         
         int[] transistions = boardCheckTransistions(piece, origin, actionHeights, board);
+        action.rowTrans = transistions[0];
+        action.rowTransWeighted = transistions[1];
+        action.colTrans = transistions[2];
+        action.colTransWeighted = transistions[3];
         
         // HEIGHT RELATED FEATURES
         int aggregateHeight = 0;

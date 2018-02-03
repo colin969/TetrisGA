@@ -23,7 +23,11 @@ public class Action {
         public int highest;
         public int altitudeDiff;
         public int tSpin;
-        public int miniTSpinClear;
+        public int rowTrans;
+        public int rowTransWeighted;
+        public int colTrans;
+        public int colTransWeighted;
+        
         public Point origin;
         public int rot;
         public boolean swap;
@@ -31,9 +35,11 @@ public class Action {
         @Override
         public String toString(){
             return String.format("Origin - %s - Rotation - %s - Holes %s - Height %s - Aggregate Height %s - Clears %s\n"
-                    + "Weighted Clears %s - Bumpiness %s - AltitudeDiff %s - Highest %s - T Spin %s - Mini T Spin Clear %s", 
+                    + "Weighted Clears %s - Bumpiness %s - AltitudeDiff %s - Highest %s - T Spin %s - Row Trans %s - Row Trans Weighted %s\n"
+                    + "Col Trans %s - Col Trans Weighted %s", 
                     origin, rot, holes, height, aggregateHeight, clears, 
-                    weightedClears, bumpiness, altitudeDiff, highest, tSpin, miniTSpinClear);
+                    weightedClears, bumpiness, altitudeDiff, highest, tSpin, rowTrans, rowTransWeighted,
+                    colTrans, colTransWeighted);
         }
 
 }

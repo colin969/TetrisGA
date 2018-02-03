@@ -74,6 +74,10 @@ public class Player {
             totalScore += genome[9] * (float)action.altitudeDiff;
             totalScore += genome[10] * (float)action.weightedClears;
             totalScore += genome[11] * (float)action.tSpin;
+            totalScore += genome[12] * (float)action.rowTrans;
+            totalScore += genome[13] * (float)action.rowTransWeighted;
+            totalScore += genome[14] * (float)action.colTrans;
+            totalScore += genome[15] * (float)action.colTransWeighted;
             return totalScore;
         }
         
