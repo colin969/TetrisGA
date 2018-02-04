@@ -18,7 +18,6 @@ public class Action {
         public int weightedClears;
         public int height;
         public int aggregateHeight;
-        public int holes;
         public int bumpiness;
         public int highest;
         public int altitudeDiff;
@@ -27,6 +26,7 @@ public class Action {
         public int rowTransWeighted;
         public int colTrans;
         public int colTransWeighted;
+        public int coveredHoles;
         
         public Point origin;
         public int rot;
@@ -34,12 +34,12 @@ public class Action {
         
         @Override
         public String toString(){
-            return String.format("Origin - %s - Rotation - %s - Holes %s - Height %s - Aggregate Height %s - Clears %s\n"
+            return String.format("Origin - %s - Rotation - %s - Height %s - Aggregate Height %s - Clears %s\n"
                     + "Weighted Clears %s - Bumpiness %s - AltitudeDiff %s - Highest %s - T Spin %s - Row Trans %s - Row Trans Weighted %s\n"
-                    + "Col Trans %s - Col Trans Weighted %s", 
-                    origin, rot, holes, height, aggregateHeight, clears, 
+                    + "Col Trans %s - Col Trans Weighted %s - Covered Holes %s", 
+                    origin, rot, height, aggregateHeight, clears, 
                     weightedClears, bumpiness, altitudeDiff, highest, tSpin, rowTrans, rowTransWeighted,
-                    colTrans, colTransWeighted);
+                    colTrans, colTransWeighted, coveredHoles);
         }
 
 }

@@ -385,7 +385,9 @@ public class Board {
     private int boardCheckHoles(Point[] piece, Point origin, Color[][] board){
         Point[] topPieces = new Point[4];
         int topPieceCount = 0;
-
+        int coveredHoles = 0;
+        
+        
         // Only check for holes under lowest piece for each column
         for(Point p : piece){
             boolean top = true;
@@ -417,6 +419,37 @@ public class Board {
         }
 
         return holes;
+    }
+    
+    private boolean checkPieceSpace(Point[] piece, Point origin, int x, int y){
+        for(Point p : piece){
+            if(p.x + origin.x == x && p.y + origin.y == y)
+                return true;
+        }
+        return false;
+    }
+    
+    private int boardCheckCoveredHoles(Point[] piece, Point origin){
+        int coveredHoles = 0;
+        
+        for (int col = 0; col < 10; col++) {
+            for (int y = 0; y < 24; y++) {
+                if(board[col][y] == background && !checkPieceSpace(piece, origin, col, y)){
+                    // Found a hole!
+                    if(board[col][y+1] != background || checkPieceSpace(piece, origin, col, y+1)){
+                        coveredHoles++;
+                        int tempY = y+2;
+                        while((board[col][tempY] != background || checkPieceSpace(piece, origin, col, tempY)) && tempY < 24){
+                            coveredHoles++;
+                            tempY++;
+                        }
+                    }
+                }
+                    
+            }
+        }
+        
+        return coveredHoles;
     }
 
     private boolean collides(Point origin, int rot){
@@ -469,8 +502,10 @@ public class Board {
         action.weightedClears = clearsInfo[1];
 
         // NUM OF PRODUCED HOLES
-        action.holes = boardCheckHoles(piece, origin, board);
-
+        //action.holes = boardCheckHoles(piece, origin, board);
+        //action.coveredHoles = boardCheckCoveredHoles(piece, origin);
+        action.coveredHoles = 0;
+        
         int[] colChange = new int[10];
         for(int i = 0; i < 10; i++)
             colChange[i] = 0;

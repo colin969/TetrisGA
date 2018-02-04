@@ -66,7 +66,7 @@ public class Player {
             float totalScore = 0;
             if(action.clears > 0)
                 totalScore += genome[action.clears-1];
-            totalScore += genome[4] * (float)action.holes;
+            totalScore += genome[4] * (float)action.coveredHoles;
             totalScore += genome[5] * (float)action.height;
             totalScore += genome[6] * (float)action.aggregateHeight;
             totalScore += genome[7] * (float)action.bumpiness;
