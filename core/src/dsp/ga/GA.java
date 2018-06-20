@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package dsp.ga;
 
 import com.opencsv.CSVWriter;
@@ -20,7 +15,7 @@ import java.util.Random;
  */
 public class GA {
     public static final int NUM_WEIGHTS = 16;
-    public static final int POP_SIZE = 100;
+    public static final int POP_SIZE = 50;
     
     private Population pop;
     private Individual workingInd;
@@ -35,7 +30,7 @@ public class GA {
             Calendar cal = Calendar.getInstance();
             cal.setTime(date);
             
-            Writer writer = Files.newBufferedWriter(Paths.get(String.format("./training_%s-%s.csv", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))));
+            Writer writer = Files.newBufferedWriter(Paths.get(String.format("./training_%s-%s-%s.csv", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND))));
 
             csv = new CSVWriter(writer,
                     CSVWriter.DEFAULT_SEPARATOR,
@@ -68,7 +63,7 @@ public class GA {
     public void printToCSV(){
         Individual best = pop.getBest();
         String[] data = new String[2 + NUM_WEIGHTS];
-        data[0] = String.valueOf(pop.generation);
+        data[0] = String.valueOf(pop.generation-1);
         for (int i = 0; i < NUM_WEIGHTS; i++) {
             data[i+2] = String.valueOf(best.weights[i]);
         }

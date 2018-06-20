@@ -13,7 +13,12 @@ import dsp.ga.GA;
 import dsp.tetris.Board;
 import dsp.tetris.Game;
 import dsp.tetris.Player;
+import javax.swing.JOptionPane;
 
+/**
+ *
+ * @author Colin Berry
+ */
 public class TetrisGA extends ApplicationAdapter implements InputProcessor {
 	private SpriteBatch batch;
         private BitmapFont font;
@@ -30,16 +35,18 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
         private float savedUpdateRate;
         private boolean paused;
         private Player heldSolution;
-        
+        private final int trainingLimit = 25;
         private GA ga;
         private boolean gen = true;
         private boolean lastGameGen;
 	
 	@Override
 	public void create () {
+                // Set up initial GA pop
                 ga = new GA();
                 ga.init();
             
+                // Set up default game values
                 game = new Game();
                 game.init();
                 timePassed = 0;
@@ -56,6 +63,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 else
                     game.resetGame(new Player(false, false, 0), testCase);
                 
+                // Set up rendering objects
                 shapeRenderer = new ShapeRenderer();
                 shapeRenderer.setAutoShapeType(true);
                 
@@ -67,6 +75,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 fullRender = true;
                 paused = false;
                 
+                // Use key and touch methods here for processing inputs
                 Gdx.input.setInputProcessor(this);
 	}
 
@@ -82,28 +91,41 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 if(!paused){
                     // Game ended, process results, start next game
                     if(game.gameEnded){
+                        // Continuing training
                         if(gen && lastGameGen){
                             // Return left board (evaluating) result
                             ga.returnResults(game.results[0]);
                             // Check for change in generation
                             if(ga.getGen() != lastGen){
+                                // Reset program when done with training, do a fresh population next
+                                if(ga.getGen() > trainingLimit){
+                                    ga.printGen();
+                                    ga.printToCSV();
+                                    dispose();
+                                    create();
+                                    return;
+                                }
                                 testCase = new Player(true, ga.getBest(), false, 1);
                                 lastGen = ga.getGen();
                                 ga.printGen();
+                                ga.printToCSV();
                                 game.updateSeed();
                             }
                             game.resetGame(new Player(true, ga.startGame(), false, 0), testCase);
                         } 
+                        // Starting player game, training was cut early, Solution is held to be put back into training later
                         if(gen && !lastGameGen){
                             game.resetGame(heldSolution, testCase);
                             lastGameGen = true;
                         }
+                        // Continue player games
                         if (!gen){
+                            game.saveGameData();
                             game.resetGame(new Player(false, false, 0), testCase);
                         }
                     }
                     
-                    // Do game step
+                    // Go forward 1 step in the game logic
                     while(timePassed > gameUpdateRate){
                         timePassed = 0;
                         game.doStep();
@@ -121,11 +143,12 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                     font.draw(batch, String.format("Individual\n%s of %s", ga.getIndNum(), ga.getIndNumMax()), 220, 60);
                 }
                 font.draw(batch, String.format("Step Rate\n%s", 1/gameUpdateRate), 520, 60);
+                // Pause text
                 if(paused)
                     font.draw(batch, "P A U S E D", 220, 200);
                 batch.end();
 
-                // Only render boards
+                // Render boards (includes upcoming pieces and held), fullRender toggle will only render stats, not pieces.
                 game.drawGame(shapeRenderer, font, batch, fullRender);
 	}
 	
@@ -133,7 +156,12 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
 	public void dispose () {
 		batch.dispose();
                 font.dispose();
+                // Ensure CSV is closed properly when app closes
+                ga.closeCSV();
+                game.closeGameData();
 	}
+        
+        // Checks for continuous inputs to allow smooth slides and drops, NOT the main input handler.
         
         private void checkInputs(){
             Board board = game.getPlayerBoard(0);
@@ -151,6 +179,8 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 }
             }
         }
+        
+        // Main input handler, hotkeys and player controls
         
         @Override
         public boolean keyDown(int keycode) {
@@ -203,6 +233,21 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 }
             }
             
+            // Load in an AI to play against
+            if(keycode == Keys.L){
+                String[] weights = JOptionPane.showInputDialog("Enter a list of weights").split("\t");
+                testCase = new Player(true, weights, 1);
+                gen = !gen;
+                game.gameEnded = true;
+                if(!gen){
+                    lastGameGen = false;
+                    heldSolution = game.getBoard(0).getPlayer();
+                }
+                game.openGameData();
+                gameUpdateRate = 0F;
+            }
+            
+            // Swap between player and AI training games
             if(keycode == Keys.ENTER){
                 gen = !gen;
                 game.gameEnded = true;
@@ -212,6 +257,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
                 }
             }
             
+            // Player controls
             if(!gen && !paused){
                 Board board = game.getPlayerBoard(0);
                 if(board != null){
@@ -240,7 +286,7 @@ public class TetrisGA extends ApplicationAdapter implements InputProcessor {
             
             return true;
         }
-
+        
         @Override
         public boolean keyUp(int keycode) {
             return true;

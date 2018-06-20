@@ -1,12 +1,6 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package dsp.tetris;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 /**
  *
@@ -16,6 +10,17 @@ public class Player {
 
         public Player(){
             this(false, false, 0);
+        }
+        
+        public Player(boolean cpu, String[] weights, int id){
+            float[] realWeights = new float[weights.length];
+            for(int i = 0; i < weights.length; i++){
+                realWeights[i] = Float.valueOf(weights[i]);
+            }
+            this.id = id;
+            this.genome = realWeights;
+            this.cpu = cpu;
+            this.debug = false;
         }
         
         public Player(boolean cpu, boolean debug, int id){
@@ -36,8 +41,6 @@ public class Player {
         private boolean debug;
 
 	private float[] genome;
-        
-        public Action nextTestAction;
         
         // Choose move based on weights
         public Action nextMove(ArrayList<Action> actions){
@@ -62,6 +65,7 @@ public class Player {
             return bestAction;
         }
         
+        // Sums the score of a given action given the AI's weights
         private float addUp(Action action){
             float totalScore = 0;
             if(action.clears > 0)
@@ -81,14 +85,21 @@ public class Player {
             return totalScore;
         }
         
+        // Returns true if it's a CPU player
         public boolean getCpu(){
             return this.cpu;
+        }
+        
+        // Returns the genome (list of feature weights)
+        public float[] getGenome(){
+            return this.genome;
         }
         
         public int getId(){
             return this.id;
         }
         
+        // Toggles whether certain information is rendered about the action taken
         public void debug(){
             debug = !debug;
         }

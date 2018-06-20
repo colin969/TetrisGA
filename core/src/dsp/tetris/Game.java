@@ -1,24 +1,28 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package dsp.tetris;
 
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import java.awt.Point;
+import com.opencsv.CSVWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Colin Berry
  */
 public class Game {
+    
+        private CSVWriter csv;
         
-        private int step;
+        private int playerRun;
         
         private int seed = 4;
         
@@ -32,7 +36,7 @@ public class Game {
         
         public boolean singlePlayer;
         
-        public int stepsPerPermaGarbage = 500;
+        public int stepsPerPermaGarbage = 350;
         
         public int nextGarbageStep;
 
@@ -47,7 +51,6 @@ public class Game {
 	public void resetGame(Player playerOne, Player playerTwo) {
             boards = new Board[2];
             gameEnded = false;
-            step = 1;
             nextGarbageStep = stepsPerPermaGarbage;
             
             boards[0] = new Board(playerOne, seed, 10, 10);
@@ -104,21 +107,55 @@ public class Game {
                 results[1] = boards[1].getResults();
                 
             }
-            step++;
         }
         
-        public void loadCPU(float[] cpu, int board){
+        public void openGameData(){
+            Date date = new Date();
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(date);
             
+            Writer writer;
+            try {
+                writer = Files.newBufferedWriter(Paths.get(String.format("./game_%s-%s-%s.csv", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND))));
+
+                csv = new CSVWriter(writer,
+                        CSVWriter.DEFAULT_SEPARATOR,
+                        CSVWriter.NO_QUOTE_CHARACTER,
+                        CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                        CSVWriter.DEFAULT_LINE_END);
+
+                String[] headers = {"Run", "Steps"};
+                csv.writeNext(headers);
+                playerRun = 1;
+            } catch (IOException ex) {
+                Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        public void closeGameData(){
+            if(csv != null){
+                try {
+                    csv.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
         
         public void saveGameData(){
+            // Negative if AI lost, postitive if won, number of steps it ran for
+            int score = boards[0].getStep() * (boards[1].isAlive() ? 1 : -1);
             
+            String[] toWrite = { String.valueOf(playerRun), String.valueOf(score) };
+            csv.writeNext(toWrite);
+            playerRun++;
         }
 
 	public Board getBoard(int id) {
 		return boards[id];
 	}
         
+        // Returns the Board object a given player is on
         public Board getPlayerBoard(int player){
             for(Board b : boards){
                 if(b.getPlayer().getId() == player)

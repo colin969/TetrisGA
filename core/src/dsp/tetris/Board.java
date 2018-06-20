@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package dsp.tetris;
 
 import com.badlogic.gdx.graphics.Color;
@@ -50,7 +45,6 @@ public class Board {
     private Tetromino holdPiece;
     private Point pieceOrigin;
     private int pieceRot;
-    private int comboLevel;
     private int garbageLevel;
     private int results;
     private int linesClear;
@@ -79,7 +73,6 @@ public class Board {
         this.garbageHole = garbageRand.nextInt(10);
         this.queuedGarbage = 0;
         this.garbageLevel = 0;
-        this.comboLevel = 0;
         this.score = 0;
         this.isAlive = true;
         this.xAnchor = xAnchor;
@@ -143,6 +136,7 @@ public class Board {
 
     }
     
+    // Slide a piece left or right on the board
     public void slide(boolean right){
         Point newOrigin = new Point(pieceOrigin.x, pieceOrigin.y);
         newOrigin.x += right ? 1 : -1;
@@ -152,6 +146,8 @@ public class Board {
         }
     }
 
+    // Rotate a piece clockwise (right) or counter-clockwise (left)
+    // Uses the kick matrix as a list of offsets to check until a valid move is found
     public void rotate(boolean right) {
         Point[][] kickMatrix;
         
@@ -169,7 +165,7 @@ public class Board {
         }
     }
     
-    // Returns new rotation and new lowest origin
+    // Returns the new valid piece rotation and origin gotten from a rotation, returns -1 if all offsets are invalid
     public Object[] getRotationTranslation(Tetromino piece, int rot, boolean right, Point origin, Point[][] kickMatrix){
         int rotIndex = (rot * 2) + (right ? 0 : -1);
         int newRot = rot + (right ? 1 : -1);
@@ -195,17 +191,20 @@ public class Board {
         return new Object[]{-1};
     }
 
+    // Drops a piece to the bottom of the baord without locking it
     public void sonicDrop() {
         int y = getLowestValid(activePiece.point[pieceRot], pieceOrigin);
         pieceOrigin.y = y;
     }
     
+    // Drops a piece to the bottom of the board and locks it
     public void hardDrop() {
         int y = getLowestValid(activePiece.point[pieceRot], pieceOrigin);
         pieceOrigin.y = y;
         lockPiece();
     }
 
+    // Drops a piece down 1 row, lock it if it can't move further
     public void softDrop() {
         // Lock piece if can't fall any more
         if(!collides(new Point(pieceOrigin.x, pieceOrigin.y - 1), pieceRot)){
@@ -215,6 +214,7 @@ public class Board {
         }
     }
 
+    // Locks a piece in place, processing any line clears and garbage afterwards
     private void lockPiece() {
         step++;
         for(Point p : activePiece.point[pieceRot]){
@@ -250,7 +250,6 @@ public class Board {
 
 
             }
-            comboLevel++;
 
         } else {
             garbageHole = garbageRand.nextInt(10);
@@ -270,13 +269,13 @@ public class Board {
                 }
                 queuedGarbage--;
             }
-            comboLevel = 0;
         }
 
         activePiece = null;
         addPiece();
     }
 
+    // Clears any filled lines on the board, returning the amount that were cleared
     private int clearLines(){
         boolean clear;
         int clears = 0;
@@ -308,6 +307,8 @@ public class Board {
         return clears;
     }
 
+    // Checks how many lines would be cleared on the board without clearing them
+    // Returns the number of cleared lines and the weighted number of cleared lines
     private int[] boardCheckClears(Point[] piece, Point origin, Color[][] board) {
         int[] data = new int[2];
         int clears = 0;
@@ -344,6 +345,7 @@ public class Board {
         return data;
     }
     
+    // Returns the number of weighted and non-weighted column and row transistions on a board
     private int[] boardCheckTransistions(Point[] piece, Point origin, int[] actionHeights, Color[][] board){
         
         int rowTransistions = 0;
@@ -381,68 +383,27 @@ public class Board {
         
         return new int[]{rowTransistions, weightedRowTransistions, colTransistions, weightedColTransistions};
     }
-
-    private int boardCheckHoles(Point[] piece, Point origin, Color[][] board){
-        Point[] topPieces = new Point[4];
-        int topPieceCount = 0;
-        int coveredHoles = 0;
-        
-        
-        // Only check for holes under lowest piece for each column
-        for(Point p : piece){
-            boolean top = true;
-            for(int compare = 0; compare < topPieceCount; compare++){
-                if(topPieces[compare].x == p.x){
-                    if(p.y < topPieces[compare].y){
-                        topPieces[compare] = p;
-                    }
-                    top = false;
-                    break;
-                }
-            }
-            if(top){
-                topPieces[topPieceCount] = p;
-                topPieceCount++;
-            }
-        }
-
-        int holes = 0;
-
-        for(int num = 0; num < topPieceCount; num++){
-            Point p = topPieces[num];
-            int y = origin.y + p.y - 1;
-            if(y >= 0){
-                if(board[origin.x + p.x][y] == background){
-                    holes++;
-                }
-            }
-        }
-
-        return holes;
-    }
     
-    private boolean checkPieceSpace(Point[] piece, Point origin, int x, int y){
-        for(Point p : piece){
-            if(p.x + origin.x == x && p.y + origin.y == y)
-                return true;
-        }
-        return false;
-    }
-    
-    private int boardCheckCoveredHoles(Point[] piece, Point origin){
+    // Returns the number of covered holes on a board
+    private int boardCheckCoveredHoles(Point[] piece, int[] colHeights, Point origin){
         int coveredHoles = 0;
+        int[] copy = new int[colHeights.length];
+        System.arraycopy(colHeights, 0, copy, 0, colHeights.length);
+        
+        for (Point p : piece){
+            if(copy[p.x + origin.x] < (p.y + origin.y)){
+                copy[p.x + origin.x] = p.y + origin.y; 
+            }
+        }
         
         for (int col = 0; col < 10; col++) {
             for (int y = 0; y < 24; y++) {
                 if(board[col][y] == background && !checkPieceSpace(piece, origin, col, y)){
-                    // Found a hole!
+                    // Found an emppty space
+                    
                     if(board[col][y+1] != background || checkPieceSpace(piece, origin, col, y+1)){
-                        coveredHoles++;
-                        int tempY = y+2;
-                        while((board[col][tempY] != background || checkPieceSpace(piece, origin, col, tempY)) && tempY < 24){
-                            coveredHoles++;
-                            tempY++;
-                        }
+                        // Found a covered hole
+                        coveredHoles += (copy[col] - (y+1));
                     }
                 }
                     
@@ -451,11 +412,22 @@ public class Board {
         
         return coveredHoles;
     }
+    
+    // Checks whether the 
+    private boolean checkPieceSpace(Point[] piece, Point origin, int x, int y){
+        for(Point p : piece){
+            if(p.x + origin.x == x && p.y + origin.y == y)
+                return true;
+        }
+        return false;
+    }
 
+    // Checks if a specific origin and rotation would collide
     private boolean collides(Point origin, int rot){
         return collides(activePiece.point[rot], origin);
     }
     
+    // Checks if a piece would collide with something else on the board
     private boolean collides(Point[] piece, Point origin){
         for(Point p : piece){
             // Edge check
@@ -492,6 +464,7 @@ public class Board {
         return validActions;
     }
 
+    // Stores all the feature values used by the AI in the Action object
     private void scoreAction(Action action, Point[] piece, Point origin, int[] colHeights){
         
         action.origin = origin;
@@ -504,7 +477,7 @@ public class Board {
         // NUM OF PRODUCED HOLES
         //action.holes = boardCheckHoles(piece, origin, board);
         //action.coveredHoles = boardCheckCoveredHoles(piece, origin);
-        action.coveredHoles = 0;
+        action.coveredHoles = boardCheckCoveredHoles(piece, colHeights, origin);
         
         int[] colChange = new int[10];
         for(int i = 0; i < 10; i++)
@@ -553,6 +526,7 @@ public class Board {
         action.altitudeDiff = highest - lowest;
     }
     
+    // Checks what type of T-Spin a move was (if at all)
     // Return - 0 = None, 1 = Mini T Spin, 2 = T Spin
     private int getTSpinType(Point origin, int rot, Color[][] board){
         Point[] spinPoints = DataSets.T_SPIN_MATRIX[rot];
@@ -598,6 +572,7 @@ public class Board {
         return 0;
     }
     
+    // Stores a list of all valid actions in the ArrayList for a given column on the board
     private void getActionsForDropPoint(ArrayList<Action> validActions, int y, Tetromino piece, int col, boolean swap, int rot, Point[][] rotMatrix, int[] colHeights, Color[][] board){
         Action slideAction = new Action();
         slideAction.swap = swap;
@@ -646,6 +621,8 @@ public class Board {
         }
     }
     
+    // Returns a list of valid actions for a piece on the board
+    // Swap piece is set in the Action object so must be passed down at this stage if it is present
     private ArrayList<Action> getActionsForPiece(Tetromino piece, boolean swap){
         // Get height of all columns on the board
         int[] colHeights = new int[10];
@@ -709,7 +686,8 @@ public class Board {
         return validActions;
     }
 
-    // Drop by a CPU, guaranteed valid move.
+    // Drop action by a CPU, guaranteed valid move, lock and score.
+    // Swaps the piece of the action was made for it
     private void cpuDrop(Point origin, int rot, boolean swap) {
 
         if(swap){
@@ -802,14 +780,16 @@ public class Board {
         renderer.rect(xAnchor, yAnchor, boardWidth, boardHeight);
     }
 
+    // Allows the adding of garbage from other boards (handled by Game)
     public void queueGarbage(int garbageLevel) {
         this.queuedGarbage += garbageLevel;
     }
 
+    // Returns the AI score for the board state.
     public int getResults() {
         results = 0;
         
-        // Differentiate between very fast losers (positive height weight) and other individuals by penalising weight very slightly.
+        // Differentiate between very fast losers (positive height weight) and other individuals by penalising height very slightly.
         int height = 0;
         int curHeight;
         for(int col = 0; col < 10; col++){
@@ -831,6 +811,7 @@ public class Board {
         return results;
     }
 
+    // Swap the current piece with the hold piece
     public void hold() {
         if(holdPiece == null){
             holdPiece = activePiece;
@@ -843,6 +824,7 @@ public class Board {
         }
     }
     
+    // Add a solid line of garbage to the board
     public void addSolidLine(){
         // Move up a line for each line of garbage
 
@@ -880,6 +862,7 @@ public class Board {
         return board;
     }
     
+    // Set piece origin
     public void setOrigin(Point origin){
         if(!collides(origin, pieceRot)){
             this.pieceOrigin = origin;
@@ -934,8 +917,12 @@ public class Board {
         return this.pieceOrigin;
     }
 
-    int getStep() {
+    public int getStep() {
         return this.step;
+    }
+
+    public void setStep(int i) {
+        this.step = i;
     }
     
 }

@@ -128,3 +128,6 @@ Thumbs.db
 ## Data
 
 *.csv
+core/assets/.~lock.training_18-18-33.csv#
+*.csv#
+*.csv

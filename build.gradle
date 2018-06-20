@@ -80,7 +80,9 @@ project(":core") {
         compile "com.opencsv:opencsv:4.0"
     }
     
-    
+    test {
+        testLogging.showStandardStreams = true
+    }
 }
 
 tasks.eclipse.doLast {
